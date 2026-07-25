@@ -1,0 +1,64 @@
+name: pomonest
+
+services:
+
+#DATABASE#
+  # postgres:
+  #   image: postgres:18-alpine
+  #   container_name: pomonest_db
+  #   ports:
+  #     - ${POSTGRES_PORT}:5432
+  #   volumes:
+  #     - data:/var/lib/postgresql
+  #     - ./_entrypoint:/docker-entrypoint-initdb.d
+  #   environment:
+  #     - TZ=Asia/Bangkok
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #     - POSTGRES_APP_USER=${POSTGRES_APP_USER}
+  #     - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
+  #   networks:
+  #     - pomo-net
+
+#BACKEND#
+  # backend:
+  #   container_name: pomonest_backend
+  #   build:
+  #     context: ./backend
+  #   ports:
+  #     - ${BACKEND_PORT}:3000
+  #   environment:
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_HOST=postgres
+  #     - POSTGRES_APP_USER=${POSTGRES_APP_USER}
+  #     - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
+  #   depends_on:
+  #     - postgres
+  #   volumes:
+  #     - ./logs:/app/logs
+  #   networks:
+  #     - pomo-net
+
+#FRONTEND#
+  frontend:
+    container_name: pomonest_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - ${FRONTEND_PORT}:5173
+    environment:
+      - API_URL=http://backend:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - pomo-net
+
+volumes:
+  data:
+
+networks:
+  pomo-net:
