@@ -25,31 +25,31 @@ services:
     networks:
       - pomo-net
 
-# #BACKEND#
-#   backend:
-#     container_name: pomonest_backend
+#BACKEND#
+  backend:
+    container_name: pomonest_backend
 
-#     build:
-#       context: ./backend
+    build:
+      context: ./backend
 
-#     ports:
-#       - ${BACKEND_PORT}:3000
+    ports:
+      - ${BACKEND_PORT}:3000
 
-#     environment:
-#       - POSTGRES_DB=${POSTGRES_DB}
-#       - POSTGRES_PORT=5432
-#       - POSTGRES_HOST=postgres
-#       - POSTGRES_APP_USER=${POSTGRES_APP_USER}
-#       - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=postgres
+      - POSTGRES_APP_USER=${POSTGRES_APP_USER}
+      - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
 
-#     depends_on:
-#       - postgres
+    depends_on:
+      - postgres
 
-#     volumes:
-#       - ./logs:/app/logs
+    volumes:
+      - ./logs:/app/logs
 
-#     networks:
-#       - pomo-net
+    networks:
+      - pomo-net
 
 #FRONTEND#
   # frontend:
