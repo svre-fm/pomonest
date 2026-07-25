@@ -1,0 +1,7 @@
+.env
+dist
+logs
+node_modules/
+migration/
+.npmrc
+.vscode/
