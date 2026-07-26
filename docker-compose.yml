@@ -53,24 +53,22 @@ services:
       - pomo-net
 
   #FRONTEND#
-    # frontend:
-    #   container_name: pomonest_frontend
-
-    #   build:
-    #     context: ./frontend
-    #     dockerfile: Dockerfile
-
-    #   ports:
-    #     - ${FRONTEND_PORT}:5173
-
-    #   environment:
-    #     - API_URL=http://backend:3000
-
-    #   depends_on:
-    #     - backend
-
-    #   networks:
-    #     - pomo-net
+  frontend:
+    container_name: pomonest_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - ${FRONTEND_PORT}:5173
+    environment:
+      - API_URL=http://backend:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - pomo-net    
 
 
 volumes:

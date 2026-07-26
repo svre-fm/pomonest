@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Baloo 2", "Sarabun", sans-serif;
+  --font-body: "Sarabun", "Baloo 2", sans-serif;
+
+  --color-cream: #FBF6EA;
+  --color-cream-card: #FFFDF7;
+  --color-shell: #3B2317;
+  --color-shell-soft: #6B4A38;
+  --color-yolk: #F2A93B;
+  --color-yolk-deep: #D97C2B;
+  --color-clay: #E8863A;
+  --color-nest: #C9A876;
+  --color-leaf: #7FA65A;
+  --color-leaf-deep: #5C8442;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-cream);
+  color: var(--color-shell);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes egg-wobble {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(9deg); }
+}
+
+.animate-egg-wobble {
+  animation: egg-wobble 0.7s ease-in-out infinite;
+}
