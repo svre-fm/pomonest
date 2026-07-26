@@ -15,8 +15,8 @@ RUN pnpm install --prod=false
 
 RUN pnpm --filter backend build
 
-ENV PORT=3000
+ENV PORT=3001
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["pnpm", "--filter", "backend", "start"]

@@ -61,7 +61,7 @@ services:
     ports:
       - ${FRONTEND_PORT}:5173
     environment:
-      - API_URL=http://backend:3000
+      - API_URL=http://backend:3001
     volumes:
       - ./frontend:/app
       - /app/node_modules

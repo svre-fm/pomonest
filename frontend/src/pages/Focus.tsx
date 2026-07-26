@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../index.css';
 
-const BACKENDPORT = import.meta.env.BACKEND_PORT || 3001;
 // ---------- egg data ----------
 type Egg = {
   id: string;
@@ -107,7 +106,7 @@ export default function Focus() {
   async function saveSessionToBackend(sessionData: { startTime: string, endTime: string, duration: number, status: string }) {
     console.log('Sending data to Backend...', sessionData);
     try {
-      const response = await fetch(`http://localhost:${BACKENDPORT}/api/timer/save`, {
+      const response = await fetch(`/api/timer/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

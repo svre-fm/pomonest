@@ -12,7 +12,11 @@ const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:" + PORTFRONT,
+  origin: [
+    "http://localhost/:" + PORTFRONT,
+    "http://fsg12.cpecmu.com/",
+    "https://fsg12.cpecmu.com/" 
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));

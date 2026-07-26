@@ -11,7 +11,19 @@ export default defineConfig({
       usePolling: true, // บังคับให้ Vite ตรวจจับการเปลี่ยนแปลงไฟล์ผ่าน Docker
     },
     hmr: {
-      clientPort: 6012, // บอก Vite ให้ส่งสัญญาณรีเฟรชไปที่พอร์ต 6012 หน้าเว็บ
+      host: 'fsg12.cpecmu.com',
+      protocol: 'wss',
+      clientPort: 443,
+    },
+    allowedHosts: ['fsg12.cpecmu.com'],
+
+    proxy: {
+      '/api': {
+        target: 'http://backend:3001/', // ชี้ไปที่ service ชื่อ backend และพอร์ต 3001 ภายใน Docker
+        changeOrigin: true,
+        secure: false,
+      }
     }
+
   }
 })
