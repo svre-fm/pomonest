@@ -14,7 +14,7 @@ const dbName = process.env.POSTGRES_DB;
 //   dbName,
 // });
 
-if (!dbUser || !dbPassword || !dbHost || !dbName || !dbName) {
+if (!dbUser || !dbPassword || !dbHost || !dbPort || !dbName) {
   throw new Error("Invalid DB env.");
 }
 

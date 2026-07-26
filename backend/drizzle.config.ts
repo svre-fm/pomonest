@@ -4,7 +4,7 @@ import { connectionString } from "@db/utils.js";
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./db/schema.ts",
+  schema: "./src/db/schema.ts",
   out: "db/migration",
   dbCredentials: {
     url: connectionString,

@@ -205,7 +205,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  backend:
     dependencies:
       dotenv:
         specifier: ^17.4.2
