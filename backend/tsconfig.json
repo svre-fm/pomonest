@@ -5,11 +5,11 @@
   ],
   "compilerOptions": {
     "types": ["node"],
-    "rootDir": ".",
+    "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
       "@db/*": ["./src/db/*"]
     }
   },
-  "include": ["./src/db/**/*", "./drizzle.config.ts"]
+  "include": [ "src/**/*"]
 }

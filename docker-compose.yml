@@ -25,15 +25,16 @@ services:
     networks:
       - pomo-net
 
-#BACKEND#
+  # BACKEND
   backend:
     container_name: pomonest_backend
 
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
 
     ports:
-      - ${BACKEND_PORT}:3000
+      - ${BACKEND_PORT}:3001
 
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -51,25 +52,25 @@ services:
     networks:
       - pomo-net
 
-#FRONTEND#
-  # frontend:
-  #   container_name: pomonest_frontend
+  #FRONTEND#
+    # frontend:
+    #   container_name: pomonest_frontend
 
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
+    #   build:
+    #     context: ./frontend
+    #     dockerfile: Dockerfile
 
-  #   ports:
-  #     - ${FRONTEND_PORT}:5173
+    #   ports:
+    #     - ${FRONTEND_PORT}:5173
 
-  #   environment:
-  #     - API_URL=http://backend:3000
+    #   environment:
+    #     - API_URL=http://backend:3000
 
-  #   depends_on:
-  #     - backend
+    #   depends_on:
+    #     - backend
 
-  #   networks:
-  #     - pomo-net
+    #   networks:
+    #     - pomo-net
 
 
 volumes:
