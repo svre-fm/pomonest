@@ -9,9 +9,9 @@ import {
 export const focusSessions = pgTable("focus_sessions", {
   id: serial("id").primaryKey(),
 
-  startTime: timestamp("start_time").notNull(),
+  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
 
-  endTime: timestamp("end_time").notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }).notNull(),
 
   duration: integer("duration").notNull(),
 

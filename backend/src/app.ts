@@ -36,7 +36,15 @@ app.post('/api/timer/save', async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: 'Focus session saved successfully!',
-      data: newSession[0]
+      data: {
+        ...newSession[0],
+        startTime: newSession[0].startTime.toLocaleString("th-TH", {
+          timeZone: "Asia/Bangkok"
+        }),
+        endTime: newSession[0].endTime.toLocaleString("th-TH", {
+          timeZone: "Asia/Bangkok"
+        })
+      }
     });
   } catch (error) {
     console.error("Error saving session:", error);
