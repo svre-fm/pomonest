@@ -5,10 +5,21 @@ import { desc } from 'drizzle-orm';
 // นำเข้าตัวเชื่อมต่อและโครงสร้างตารางจากโฟลเดอร์ db ของเพื่อน
 import { dbClient } from '@db/client.js';
 import { focusSessions } from '@db/schema.js';
+import cors from "cors";
+
+const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
 const app = express();
-app.use(express.json());
 
+app.use(cors({
+  origin: "http://localhost:" + PORTFRONT,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+app.options(/.*/, cors());
+
+app.use(express.json());
 // ==========================================
 // API 1: บันทึกประวัติการจับเวลา (เรียกตอนกด Stop)
 // ==========================================

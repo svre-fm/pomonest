@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import './style.css';
+import '../index.css';
 
+const BACKENDPORT = import.meta.env.BACKEND_PORT || 3001;
 // ---------- egg data ----------
 type Egg = {
   id: string;
@@ -20,8 +21,8 @@ const eggOptions: Egg[] = [
 
 type FocusSession = {
   id: number;
-  start_time: Date;
-  end_time: Date;
+  startTime: Date;
+  endTime: Date;
   duration: number;
   status: 'completed' | 'failed';
 };
@@ -103,10 +104,10 @@ export default function Focus() {
   }, [elapsed, targetSeconds, running]);
 
   // ---------- 1. sending data to Backend ----------
-  async function saveSessionToBackend(sessionData: { start_time: string, end_time: string, duration: number, status: string }) {
+  async function saveSessionToBackend(sessionData: { startTime: string, endTime: string, duration: number, status: string }) {
     console.log('Sending data to Backend...', sessionData);
     try {
-      const response = await fetch('http://localhost:3000/api/focus_sessions', {
+      const response = await fetch(`http://localhost:${BACKENDPORT}/api/timer/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,8 +133,8 @@ export default function Focus() {
     const status = currentElapsed >= targetSeconds ? 'completed' : 'failed';
 
     const newSessionForDB = {
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       duration: duration,
       status: status
     };
@@ -144,8 +145,8 @@ export default function Focus() {
       ...prev,
       {
         id: prev.length + 1,
-        start_time: startTime,
-        end_time: endTime,
+        startTime: startTime,
+        endTime: endTime,
         duration: duration,
         status: status as 'completed' | 'failed',
       },
@@ -335,7 +336,7 @@ export default function Focus() {
                       </div>
                       <div className="history-row">
                         <span className="history-time">
-                          {formatTimeOfDay(session.start_time)} - {formatTimeOfDay(session.end_time)}
+                          {formatTimeOfDay(session.startTime)} - {formatTimeOfDay(session.endTime)}
                         </span>
                         <span className="history-duration">{formatClock(session.duration)}</span>
                       </div>
