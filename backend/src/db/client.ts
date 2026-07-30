@@ -3,6 +3,8 @@ import * as schema from "@db/schema.js";
 import postgres from "postgres";
 import { connectionString } from "@db/utils.js";
 
+
+console.log(connectionString);
 export const dbConn = postgres(connectionString);
 
 export const dbClient = drizzle(dbConn, { schema: schema, logger: true });

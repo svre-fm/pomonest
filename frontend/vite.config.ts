@@ -5,21 +5,21 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true,         // อนุญาตให้ Docker ภายนอกเข้าถึงได้
-    port: 5173,         // พอร์ตที่รันโหมด dev
+    host: true,         
+    port: 5173,         
     watch: {
-      usePolling: true, // บังคับให้ Vite ตรวจจับการเปลี่ยนแปลงไฟล์ผ่าน Docker
+      usePolling: true, 
     },
     hmr: {
-      host: 'fsg12.cpecmu.com',
-      protocol: 'wss',
-      clientPort: 443,
+      host: process.env.VITE_HMR_HOST,
+      protocol: process.env.VITE_HMR_PROTOCOL,
+      clientPort: Number(process.env.VITE_HMR_PORT),
     },
     allowedHosts: ['fsg12.cpecmu.com'],
 
     proxy: {
       '/api': {
-        target: 'http://backend:3001/', // ชี้ไปที่ service ชื่อ backend และพอร์ต 3001 ภายใน Docker
+        target: 'http://backend:3001/',
         changeOrigin: true,
         secure: false,
       }
