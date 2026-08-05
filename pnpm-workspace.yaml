@@ -3,4 +3,5 @@ packages:
   - frontend
 
 allowBuilds:
+  cypress: false
   esbuild: true

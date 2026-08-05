@@ -17,6 +17,8 @@ import {
 } from "@db/schema.js";
 import cors from "cors";
 import { hashPassword, verifyPassword } from "./auth/password.js";
+import {randomUUID} from "node:crypto";
+import { sendVerificationEmail } from "./service/mail.service.js";
 
 const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
@@ -87,6 +89,8 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
       return res.status(409).json({ error: "email หรือ username ถูกใช้แล้ว" });
     }
 
+    const token = randomUUID();
+
     const hashedPassword = await hashPassword(password);
 
     const [newUser] = await dbClient
@@ -96,8 +100,15 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         avatar: avatar ?? null,
+
+        emailVerified: false,
+        verificationToken: token,
+        verificationExpire: new Date(Date.now() + 60 * 60 * 1000),
       })
       .returning();
+
+    //send token to email
+    await sendVerificationEmail(email, token);
 
     res.status(201).json({
       message: "สมัครสมาชิกสำเร็จ",
@@ -106,6 +117,61 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).json({ error: "ไม่สามารถสมัครสมาชิกได้" });
+  }
+});
+
+// ==========================================
+// API: ยืนยัน Email
+// ==========================================
+app.get("/api/auth/verify", async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).send("Invalid token");
+    }
+
+
+    const [user] = await dbClient
+      .select()
+      .from(users)
+      .where(eq(users.verificationToken, token))
+      .limit(1);
+
+
+    if (!user) {
+      return res.status(400).send("Token ไม่ถูกต้อง");
+    }
+
+
+    // เช็คหมดอายุ
+    if (
+      user.verificationExpire &&
+      user.verificationExpire < new Date()
+    ) {
+      return res.status(400).send("Token หมดอายุ");
+    }
+
+
+    await dbClient
+      .update(users)
+      .set({
+        emailVerified: true,
+        verificationToken: null,
+        verificationExpire: null,
+      })
+      .where(eq(users.id, user.id));
+
+
+    res.send(`
+      <h2>Email verified successfully 🎉</h2>
+      <p>You can now login to Pomonest.</p>
+    `);
+
+
+  } catch(error){
+    console.error(error);
+    res.status(500).send("Verify failed");
   }
 });
 
@@ -142,8 +208,15 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
     }
 
     const isValid = await verifyPassword(password, user.password);
+
     if (!isValid) {
       return res.status(401).json({ error: "ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ",
+    });
     }
 
     res.status(200).json({

@@ -43,6 +43,11 @@ services:
       - POSTGRES_APP_USER=${POSTGRES_APP_USER}
       - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
 
+      #Emial verification
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+
     depends_on:
       - postgres
 

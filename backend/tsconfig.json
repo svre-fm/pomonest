@@ -4,6 +4,7 @@
     "@tsconfig/node-ts/tsconfig.json"
   ],
   "compilerOptions": {
+    "jsx": "react-jsx",
     "types": ["node"],
     "rootDir": "./src",
     "outDir": "./dist",

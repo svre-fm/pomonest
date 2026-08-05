@@ -46,6 +46,12 @@ export const users = pgTable("users", {
 
   avatar: varchar("avatar", { length: 255 }),
 
+  emailVerified: boolean("email_verified").default(false).notNull(),
+
+  verificationToken: varchar("verification_token", { length: 255 }),
+
+  verificationExpire: timestamp("verification_expire"),
+
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
