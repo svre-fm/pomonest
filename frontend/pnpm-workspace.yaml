@@ -1,2 +1,4 @@
+allowBuilds:
+  cypress: false
 minimumReleaseAgeExclude:
   - postcss@8.5.23
