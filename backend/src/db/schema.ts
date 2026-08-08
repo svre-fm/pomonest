@@ -50,7 +50,9 @@ export const users = pgTable("users", {
 
   verificationToken: varchar("verification_token", { length: 255 }),
 
-  verificationExpire: timestamp("verification_expire"),
+  verificationExpire: timestamp("verification_expire", {
+    withTimezone: true,
+  }),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

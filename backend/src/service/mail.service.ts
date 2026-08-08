@@ -13,7 +13,11 @@ export async function sendVerificationEmail(
   token: string,
 ) {
   const verifyUrl =
-    `${process.env.FRONTEND_URL}/verify?token=${token}`;
+    `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`;
+
+    console.log("Verify URL:", verifyUrl);
+
+    console.log("Sending to:", email);
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,

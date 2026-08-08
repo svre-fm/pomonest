@@ -19,6 +19,7 @@ import cors from "cors";
 import { hashPassword, verifyPassword } from "./auth/password.js";
 import {randomUUID} from "node:crypto";
 import { sendVerificationEmail } from "./service/mail.service.js";
+import { startCleanupJob } from "./jobs/cleanup-unverified-users.js";
 
 const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
@@ -80,7 +81,10 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
     }
 
     const existing = await dbClient
-      .select({ id: users.id })
+      .select({ 
+        id: users.id,
+        emailVerified: users.emailVerified
+      })
       .from(users)
       .where(or(eq(users.email, email), eq(users.username, username)))
       .limit(1);
@@ -103,15 +107,16 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
 
         emailVerified: false,
         verificationToken: token,
-        verificationExpire: new Date(Date.now() + 60 * 60 * 1000),
+        verificationExpire: new Date(Date.now() + 5 * 60 * 1000),
       })
       .returning();
+      console.log(new Date(Date.now() + 5 * 60 * 1000));
 
     //send token to email
     await sendVerificationEmail(email, token);
 
     res.status(201).json({
-      message: "สมัครสมาชิกสำเร็จ",
+      message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
       data: formatUser(newUser),
     });
   } catch (error) {
@@ -131,27 +136,28 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       return res.status(400).send("Invalid token");
     }
 
-
     const [user] = await dbClient
       .select()
       .from(users)
       .where(eq(users.verificationToken, token))
       .limit(1);
 
-
     if (!user) {
-      return res.status(400).send("Token ไม่ถูกต้อง");
+      return res.status(400).send("Token ไม่ถูกต้องหรือหมดอายุ");
     }
 
+    if (user.emailVerified) {
+      return res.send("Email นี้ได้รับการยืนยันแล้ว");
+    }
 
-    // เช็คหมดอายุ
     if (
       user.verificationExpire &&
       user.verificationExpire < new Date()
     ) {
-      return res.status(400).send("Token หมดอายุ");
+      return res
+        .status(400)
+        .send("Token หมดอายุ กรุณาสมัครใหม่");
     }
-
 
     await dbClient
       .update(users)
@@ -162,14 +168,10 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       })
       .where(eq(users.id, user.id));
 
-
-    res.send(`
-      <h2>Email verified successfully 🎉</h2>
-      <p>You can now login to Pomonest.</p>
-    `);
-
-
-  } catch(error){
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/verify-success`
+    );
+  } catch (error) {
     console.error(error);
     res.status(500).send("Verify failed");
   }
@@ -241,6 +243,10 @@ app.get("/api/auth/user/:id", async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+
+    if (user.emailVerified) {
+    return res.send("Email นี้ได้รับการยืนยันแล้ว");
+    }
 
     if (!user) {
       return res.status(404).json({ error: "ไม่พบผู้ใช้" });
@@ -350,6 +356,8 @@ app.get("/api/timer/history", async (req: Request, res: Response) => {
 // เริ่มการทำงานของ Server
 // ==========================================
 const PORT = process.env.BACKEND_PORT || 3001;
+
+startCleanupJob();
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
