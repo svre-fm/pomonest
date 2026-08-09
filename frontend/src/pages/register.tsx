@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import '../index.css';
 import { Link,useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
 
 //avatar
 const avatars = [
@@ -21,6 +26,8 @@ export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // ----------------------------------------
     // Register
@@ -173,29 +180,51 @@ export default function Register() {
                             <div className="input-group">
                                 <label>PASSWORD</label>
 
-                                <input
-                                type="password"
-                                className="auth-input"
-                                required
-                                value={password}
-                                onChange={(e) =>
-                                    setPassword(e.target.value)
-                                }
-                                />
+                                <div className="password-wrapper">
+                                    <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="auth-input"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    />
+
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        <FontAwesomeIcon
+                                        icon={showPassword ? faEyeSlash : faEye}
+                                        style={{ color: 'rgb(228, 152, 93)', fontSize:'15px' }}
+                                        />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="input-group">
-                                <label>CONFIRM PASSWORD</label>
+                            <label>CONFIRM PASSWORD</label>
 
+                            <div className="password-wrapper">
                                 <input
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 className="auth-input"
                                 required
                                 value={confirmPassword}
-                                onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
-                                }
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 />
+
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                >
+                                    <FontAwesomeIcon
+                                    icon={showConfirmPassword ? faEyeSlash : faEye}
+                                    style={{ color: 'rgb(228, 152, 93)', fontSize:'15px' }}
+                                    />
+                                </button>
+                            </div>
                             </div>
 
                             <button

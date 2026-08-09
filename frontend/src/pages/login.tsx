@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import '../index.css';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -14,6 +19,7 @@ export default function Login({
   // Form States
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // ----------------------------------------
   // Login
@@ -122,15 +128,26 @@ export default function Login({
             <div className="input-group">
               <label>PASSWORD</label>
 
+              <div className="password-wrapper">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 className="auth-input"
                 required
                 value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
+                onChange={(e) => setPassword(e.target.value)}
               />
+
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <FontAwesomeIcon
+                  icon={showPassword ? faEyeSlash : faEye}
+                  style={{ color: 'rgba(168, 161, 56, 1)', fontSize:'15px' }}
+                />
+              </button>
+              </div>
             </div>
 
             <div className="form-options">

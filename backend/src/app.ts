@@ -23,6 +23,9 @@ import { startCleanupJob } from "./jobs/cleanup-unverified-users.js";
 
 const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
+const frontendUrl =
+      process.env.FRONTEND_URL || `http://localhost:${PORTFRONT}`;
+
 // อ้างอิงตารางข้อมูลทั้งหมดตาม schema ของเพื่อน
 const dataTables = {
   users,
@@ -133,7 +136,7 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
     const { token } = req.query;
 
     if (!token || typeof token !== "string") {
-      return res.status(400).send("Invalid token");
+      return res.redirect(`${frontendUrl}/verify?status=invalid`);
     }
 
     const [user] = await dbClient
@@ -143,20 +146,20 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!user) {
-      return res.status(400).send("Token ไม่ถูกต้องหรือหมดอายุ");
+      //token หมดอายุ
+      return res.redirect(`${frontendUrl}/verify?status=invalid`);
     }
 
     if (user.emailVerified) {
-      return res.send("Email นี้ได้รับการยืนยันแล้ว");
+      // ยืนยัน eamil แล้ว
+      return res.redirect(`${frontendUrl}/verify?status=already`);
     }
 
     if (
       user.verificationExpire &&
       user.verificationExpire < new Date()
     ) {
-      return res
-        .status(400)
-        .send("Token หมดอายุ กรุณาสมัครใหม่");
+      return res.redirect(`${frontendUrl}/verify?status=expired`);
     }
 
     await dbClient
@@ -169,11 +172,13 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       .where(eq(users.id, user.id));
 
     return res.redirect(
-      `${process.env.FRONTEND_URL}/verify-success`
+      `${process.env.FRONTEND_URL}/verify?status=success`
     );
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Verify failed");
+    console.error("Verify error:", error);
+
+    return res.redirect(`${frontendUrl}/verify?status=error`);
+
   }
 });
 
