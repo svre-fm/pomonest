@@ -1,0 +1,342 @@
+/* =========================================
+   หน้า Home (Dashboard Layout)
+   ========================================= */
+.home-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #fdf8ed;
+  color: #4a3320;
+}
+
+/* =========================================
+   Sidebar
+   ========================================= */
+.sidebar {
+  width: 240px;
+  background-color: #fdf8ed;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid rgba(140, 115, 94, 0.1);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* คลาสสำหรับกำหนดขนาดโลโก้ */
+.sidebar-logo {
+  width: 100%; /* ให้กว้างเต็มพื้นที่ที่กำหนด */
+  max-width: 200px; /* ปรับขนาดความกว้างสูงสุดของโลโก้ตามต้องการ */
+  height: auto;
+  object-fit: contain;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #8c735e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background-color: rgba(140, 115, 94, 0.05);
+}
+
+.nav-item.active {
+  background-color: #ffffff;
+  color: #4a3320;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* =========================================
+   Main Content
+   ========================================= */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 30px 40px 20px 40px;
+}
+
+.welcome-text h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.welcome-text p {
+  margin: 5px 0 0 0;
+  color: #8c735e;
+  font-size: 16px;
+}
+
+.stats-card {
+  display: flex;
+  background-color: #ffffff;
+  padding: 15px 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  gap: 20px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #8c735e;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.stat-divider {
+  width: 1px;
+  background-color: rgba(140, 115, 94, 0.2);
+}
+
+/* =========================================
+   Grid Layout
+   ========================================= */
+.dashboard-grid {
+  display: grid;
+  /* แบ่ง 3 คอลัมน์ */
+  grid-template-columns: 1.5fr 1.4fr 1fr; 
+  gap: 20px;
+  flex: 1;
+  background-image: url('/images/home.jpg'); 
+  background-size: cover;
+  background-position: left bottom;
+  padding: 20px 40px 40px 40px;
+}
+
+/* คอลัมน์แรก */
+.empty-spacer {
+  pointer-events: none;
+}
+
+/* คอลัมน์สำหรับ 2 กล่องแนวตั้ง */
+.right-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background-color: rgba(253, 248, 237, 0.95);
+  border-radius: 24px;
+  padding: 25px;
+  box-shadow: 0 8px 25px rgba(140, 115, 94, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #4a3320;
+}
+
+/* Card พื้นฐาน */
+.card {
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* =========================================
+   Today's Tasks
+   ========================================= */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border: 1px solid rgba(140, 115, 94, 0.1);
+  border-radius: 16px;
+  transition: background 0.2s;
+}
+
+.task-item:hover {
+  background-color: #fafafa;
+}
+
+.task-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ded65a;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.task-checkbox.completed {
+  background-color: #ded65a;
+}
+
+.task-text {
+  font-size: 16px;
+}
+.task-text.completed {
+  text-decoration: line-through;
+  color: #8c735e;
+}
+
+/* ปุ่มจัดการ Task (Edit / Delete) */
+.task-actions {
+  display: flex;
+  gap: 10px;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8c735e;
+  font-size: 16px;
+  box-shadow: none;
+  padding: 5px;
+}
+.icon-btn:hover {
+  color: #4a3320;
+  transform: scale(1.1);
+}
+
+/* ฟอร์มกรอก Task ใหม่ / แก้ไข */
+.task-input-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.task-input {
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(140, 115, 94, 0.2);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+.task-input:focus { border-color: #ded65a; }
+
+.add-btn {
+  background-color: #ded65a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #4a3320;
+  box-shadow: none;
+}
+.add-btn:hover { background-color: #e6df73; }
+
+/* =========================================
+   Recent Activity Log
+   ========================================= */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activity-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #f4ece1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.activity-desc {
+  font-size: 12px;
+  color: #8c735e;
+  margin: 0;
+}
+
+.activity-time {
+  font-size: 11px;
+  color: #8c735e;
+}
