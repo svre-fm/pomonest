@@ -90,18 +90,6 @@ export default function Verify() {
                         Please check your inbox and click the link
                         to activate your account.
                         </p>
-
-                        <button
-                        className="btn-gmail"
-                        onClick={() => {
-                            window.open(
-                            "https://mail.google.com/",
-                            "_blank"
-                            );
-                        }}
-                        >
-                        Open Gmail
-                        </button>
                     </>
                     )}
                 </>

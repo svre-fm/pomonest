@@ -34,7 +34,7 @@ export async function sendVerificationEmail(
 <body style="
     margin:0;
     padding:40px 0;
-    background:#ddd2a7;
+    background:none;
 ">
 
 <table
@@ -51,7 +51,6 @@ width="460"
 cellpadding="0"
 cellspacing="0"
 style="
-background:#ffffff;
 border-radius:40px;
 padding:40px;
 font-family:Arial,sans-serif;
@@ -62,15 +61,11 @@ text-align:center;
 <tr>
 <td>
 
-<h1
-style="
-color:#7a593f;
-font-size:34px;
-margin:15px 0 25px;
-"
+
+<img
+  src="cid:pomonest-logo"
+  style="width:70%;"
 >
-Welcome to Pomonest
-</h1>
 
 <p
 style="
@@ -139,5 +134,13 @@ This verification link will expire in 1 hour.
 </body>
 </html>
     `,
+
+  attachments: [
+    {
+      filename: "logo.png",
+      path: "./src/assets/logo.png",
+      cid: "pomonest-logo",
+    },
+  ],
   });
 }
