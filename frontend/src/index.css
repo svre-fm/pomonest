@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Kanit:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mali:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Baloo 2", "Sarabun", sans-serif;
-  --font-body: "Sarabun", "Baloo 2", sans-serif;
+--font-display: "Itim", cursive, sans-serif;
+  --font-body: "Itim", cursive, sans-serif;
 
   --color-cream: #FBF6EA;
   --color-cream-card: #FFFDF7;
@@ -30,7 +32,7 @@ body {
   font-family: var(--font-display);
 }
 
-/* ---------- Custom Components & Layouts (จาก style.css เดิม) ---------- */
+/* ---------- Custom Components & Layouts ---------- */
 .focus-page {
   min-height: 100vh;
   background-color: var(--bg-color);
@@ -300,3 +302,449 @@ button {
 .collection-item img { width: 60px; height: 60px; object-fit: contain; }
 .collection-item .name { font-weight: bold; margin-top: 0.5rem; }
 .collection-item .time { font-size: 0.75rem; color: var(--text-light); }
+
+/* ---------- Login ---------- */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url('/images/login_bg.png');
+  background-color: #1a1a2e;
+  background-size: cover;
+  background-position: center;
+  overflow: visible;
+}
+
+.auth-background-blur {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+.auth-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  min-height: 100vh;
+  width: 100%;
+  overflow: visible;
+}
+
+.auth-frame {
+  position: relative;
+  width: 450px;
+  border-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120px;
+  padding-left: 60px;
+  padding-right: 60px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  background: #fff;
+  overflow: visible;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
+}
+
+.logo-wrapper {
+  position: absolute;
+  top: -85px;
+  left: 52%;
+  transform: translateX(-50%);
+  width: 450px;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+.auth-img {
+  width: 600px;
+  height: auto;
+  display: block;
+  
+}
+
+.auth-title {
+  margin-bottom: 20px;
+  color: #7a593f;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+}
+
+.auth-form {
+  align-items: center;
+  top: -30px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.input-group label {
+  color: #4a3018;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 2px solid #8e6c4a;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.auth-input:focus {
+  border-color: var(--color-leaf-deep);
+  background-color: #ffffff;
+}
+
+/* Remember Me & Forgot Password */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: -5px; 
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a3018;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: #4a3018;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.forgot-link:hover {
+  color: var(--color-nest);
+}
+
+/* SIGN IN / SIGN UP Buttons*/
+.btn-submit {
+  width: 80%;
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #7a593f;
+  letter-spacing: 1px;
+}
+
+/* Footer Login/Register */
+.auth-footer {
+  margin-top: 25px;
+  color: #4a3018;
+  font-size: 14px;
+  font-weight: 500;
+}
+.auth-footer a {
+  font-size: 15px;
+  font-family: 'Mali', cursive;
+  color: var(--color-leaf-deep);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 5px;
+  color: #0c991f;
+}
+
+/* register-form  */
+
+.regis-frame {
+  position: relative;
+  width: 900px;
+  border-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  background: #fff;
+  overflow: visible;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
+}
+
+.regis-container {
+  margin-top: 150px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.avatar {
+  display: flex;
+  width: 40%;
+  height: 400px;
+  overflow: hidden;
+  margin-top: -80px;
+  padding: 15px;
+  border-right: 2px solid #f1ae7a;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-preview {
+  width: 40%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.avatar-preview img {
+  border-radius: 30px ;
+}
+
+.avatar-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.avatar-option {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: 0.2s;
+  ;
+}
+
+.avatar-option:hover{
+  transform: scale(1.1);
+}
+
+.avatar-option:active {
+  transform: scale(0.5);
+}
+
+.avatar-option.selected {
+  border-color: #ff9f68;
+  transform: scale(1.1);
+}
+
+.register{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -30px;
+  padding: 15px;
+  width: 60%;
+}
+
+.register-form {
+  align-items: center;
+  gap: 8px;
+}
+
+.register-form .input-group {
+  gap: 2px;
+}
+
+.register-form .auth-input {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.register-form .btn-submit {
+  margin-top: 5px;
+  padding: 10px 20px;
+}
+
+.register-form ~ .auth-footer {
+  margin-top: 15px; 
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper .auth-input {
+  width: 100%;
+  padding-right: 45px;
+  box-sizing: border-box;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+  font-size: 18px;
+
+  padding: 4px;
+  box-shadow: none;
+}
+
+.password-toggle:hover{
+  background: transparent;
+}
+
+.password-toggle:active{
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Verify Email */
+.verify-email-box {
+  position: relative;
+  width: 450px;
+  height: auto;
+  border-radius: 50px;
+  padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 15px;
+  box-sizing: border-box;
+  background: #fff;
+  overflow: visible;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.6));
+}
+
+.verify-icon {
+  font-size: 55px;
+}
+
+.verify-text {
+  margin-top: -20px;
+  color: #4a3018;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.verify-text strong {
+  color: var(--color-leaf-deep);
+  font-size: 18px;
+  display: block;
+  margin-top: 5px;
+}
+
+.verify-subtext {
+  color: rgba(74, 48, 24, 0.8);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.btn-gmail {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,50%);
+  color: #fff;
+  border: 2px solid #903f39;
+  background: #de6e5a;
+  box-shadow: 0px 6px 0 #a55e51; 
+  transition: all 0.1s ease-in-out;
+}
+
+.btn-gmail:hover {
+  background: #e99588;
+}
+
+.btn-gmail:active{
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,60%);
+  box-shadow: 0px 0px 0 #a55e51;
+}
+
+.btn-gmail a{
+  color: #fff;
+}
+
+.btn-back {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,50%);
+}
+
+.btn-back:active{
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,60%);
+  box-shadow: 0px 0px 0 #99a551;
+}
+
+/* Button */
+button {
+  border: 2px solid #908339;
+  background: rgb(222, 214, 90);
+  padding: 12px 20px;
+  border-radius: 60px;
+  cursor: pointer;
+  box-shadow: 0px 6px 0 #99a551; 
+  transition: all 0.1s ease-in-out;
+}
+
+button:hover {
+  background: #e6df73;
+}
+
+button:active {
+  transform: translateY(6px);
+  box-shadow: 0px 0px 0 #99a551;
+}
+
+a {
+  font-family: 'Mali', cursive;
+  color: #7a593f;
+  font-weight: 600;
+  font-size: 20px;
+  text-decoration: none;
+}

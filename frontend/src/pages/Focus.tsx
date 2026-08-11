@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../index.css';
 
-const BACKENDPORT = import.meta.env.BACKEND_PORT || 3001;
 // ---------- egg data ----------
 type Egg = {
   id: string;
@@ -107,7 +106,7 @@ export default function Focus() {
   async function saveSessionToBackend(sessionData: { startTime: string, endTime: string, duration: number, status: string }) {
     console.log('Sending data to Backend...', sessionData);
     try {
-      const response = await fetch(`http://localhost:${BACKENDPORT}/api/timer/save`, {
+      const response = await fetch(`/api/timer/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,6 +225,7 @@ export default function Focus() {
               {eggOptions.map((e) => (
                 <button
                   key={e.id}
+                  data-cy={`egg-option-${e.id}`}
                   onClick={() => setEggId(e.id)}
                   className={`egg-option ${eggId === e.id ? 'active' : ''}`}
                 >
@@ -240,6 +240,7 @@ export default function Focus() {
                 setPhase('focusing');
                 handleStart();
               }}
+              data-cy="start-focus"
               className="btn-primary"
             >
               Start Focusing
@@ -314,7 +315,7 @@ export default function Focus() {
               ) : (
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                   {running ? (
-                    <button onClick={handleStop} className="btn-stop">Stop</button>
+                    <button onClick={handleStop} data-cy="stop-focus" className="btn-stop">Stop</button>
                   ) : (
                     <button onClick={handleStart} className="btn-start">
                       {startedOnce ? 'Continue' : 'Start Focusing'}

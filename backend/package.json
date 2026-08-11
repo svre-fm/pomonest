@@ -12,7 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:prototype": "tsx ./db/prototype.ts",
     "build": "tsc && tsc-alias",
-    "eol": "eolConverter _entrypoint/*.sh"
+    "eol": "eolConverter _entrypoint/*.sh",
+    "email:dev": "email dev"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +27,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.0",
     "cors": "^2.8.6",
     "debug": "^4.4.3",
     "dotenv": "^17.4.2",
@@ -33,7 +36,11 @@
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "morgan": "^1.11.0",
-    "postgres": "^3.4.9"
+    "node-cron": "^4.6.0",
+    "nodemailer": "^9.0.4",
+    "postgres": "^3.4.9",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^24.0.0",
@@ -43,6 +50,9 @@
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.1.1",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "eol-converter-cli": "^1.1.0",
