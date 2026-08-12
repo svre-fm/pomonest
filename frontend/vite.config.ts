@@ -5,10 +5,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true,         
-    port: 5173,         
+    host: true,
+    port: 5173,
     watch: {
-      usePolling: true, 
+      usePolling: true,
     },
     hmr: {
       host: process.env.VITE_HMR_HOST,
@@ -19,11 +19,11 @@ export default defineConfig({
 
     proxy: {
       '/api': {
-        target: 'http://backend:3001/',
+        // ใช้ VITE_BACKEND_URL ถ้ามี (Docker), ไม่งั้นใช้ localhost (local dev)
+        target: process.env.VITE_BACKEND_URL || 'http://backend:3001/',
         changeOrigin: true,
         secure: false,
       }
     }
-
   }
-})
+})
