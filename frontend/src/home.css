@@ -29,7 +29,7 @@
   margin-bottom: 20px;
 }
 
-/* คลาสสำหรับกำหนดขนาดโลโก้ */
+/* กำหนดขนาดโลโก้ */
 .sidebar-logo {
   width: 100%; 
   max-width: 200px; 
@@ -125,6 +125,29 @@
   background-color: rgba(140, 115, 94, 0.2);
 }
 
+/* 1. ปุ่ม + New Todo */
+.btn-todo {
+  width: 100%;
+  padding: 12px 20px;
+  margin-bottom: 15px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 60px;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0px 6px 0 #99a551;
+  transition: all 0.1s ease-in-out;
+}
+
+.btn-todo:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #99a551;
+}
+
+
 /* =========================================
    Grid Layout
    ========================================= */
@@ -157,7 +180,7 @@
 }
 
 /* =========================================
-   การ์ดรวม (ลบส่วนที่ซ้ำกันออกแล้ว)
+   การ์ดรวม 
    ========================================= */
 .card {
   background-color: rgba(253, 248, 237, 0.95);
@@ -199,7 +222,7 @@
   padding-right: 5px; 
 }
 
-/* ตกแต่งแถบเลื่อน (Scrollbar) ให้เข้ากับธีม */
+/* ตกแต่งแถบเลื่อน (Scrollbar) */
 .task-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -293,17 +316,27 @@
 }
 .task-input:focus { border-color: #ded65a; }
 
-.add-btn {
+/* ปุ่ม Add category */
+.btn-add {
+  padding: 10px 24px;
   background-color: #ded65a;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-weight: bold;
+  border: 2px solid #908339;
+  border-radius: 60px;
+  
+  color: #7a593f;
+  font-weight: 800;
+  font-size: 16px;
+  font-family: inherit;
+  
   cursor: pointer;
-  color: #4a3320;
-  box-shadow: none;
+  box-shadow: 0px 4px 0 #99a551;
+  transition: all 0.1s ease-in-out;
 }
-.add-btn:hover { background-color: #e6df73; }
+
+.btn-add:active {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0 #99a551;
+}
 
 /* =========================================
    Recent Activity Log
@@ -350,4 +383,77 @@
 .activity-time {
   font-size: 11px;
   color: #8c735e;
+}
+
+/* 2. คอนเทนเนอร์ปุ่ม Back to Dashboard */
+.back-btn-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 25px;
+  color: #8c735e;
+  font-size: 16px;
+  font-weight: bold;
+  width: fit-content;
+  transition: color 0.2s;
+}
+
+.back-btn-wrapper:hover {
+  color: #7a593f;
+}
+
+/* 3. ปุ่มลูกศรกลับ */
+.btn-back-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 50%;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0px 4px 0 #99a551;
+  transition: all 0.1s ease-in-out;
+}
+
+.back-btn-wrapper:active .btn-back-circle {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0 #99a551;
+}
+
+/* ปุ่ม Save & Add Task / Update Task */
+.btn-save {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px 20px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 60px;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0px 6px 0 #99a551;
+  transition: all 0.1s ease-in-out;
+}
+
+.btn-save:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #99a551;
+}
+
+/* ปรับแต่งช่องเลือกสี (Color Picker) */
+.color-picker-input {
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  border: 2px solid #e2d7c8;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
 }

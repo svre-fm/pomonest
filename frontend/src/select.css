@@ -26,33 +26,25 @@
   font-size: 14px;
 }
 
-.back-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  margin-right: 15px;
-  color: #8c735e;
-}
-
 .egg-content-wrapper {
   display: flex;
   gap: 30px;
   flex: 1;
-  min-height: 0; /* ล็อคไม่ให้จอยืด */
+  width: 100%; 
+  min-height: 0;
 }
 
-/* ฝั่งซ้าย: กล่องการ์ดไข่ */
+/* กล่องการ์ดไข่ (ใช้ Grid บังคับ 3 ช่องเท่ากัน) */
 .egg-cards-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   flex: 2;
-  overflow-x: auto;
-  padding-bottom: 10px;
+  width: 100%;
 }
 
 .egg-card {
-  flex: 0 0 220px; /* ขนาดกล่องไข่แต่ละใบ */
+  width: 100%;
   border: 2px solid transparent;
   background-color: white;
   border-radius: 20px;
@@ -71,8 +63,17 @@
 }
 
 .egg-image-placeholder {
-  font-size: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90px;
   margin-bottom: 15px;
+}
+
+.egg-display-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .egg-card h3 {
@@ -109,7 +110,7 @@
   border-radius: 3px;
 }
 
-/* ฝั่งขวา: ข้อมูลไข่ */
+/* ข้อมูลไข่ */
 .egg-info-panel {
   flex: 1;
   background-color: white;
@@ -141,7 +142,7 @@
 .animal-icons-row {
   display: flex;
   gap: 12px;
-  margin-bottom: auto; /* ดันปุ่มโฟกัสลงไปชิดขอบล่างสุด */
+  margin-bottom: auto;
 }
 
 .animal-icon {
@@ -153,29 +154,33 @@
   align-items: center;
   justify-content: center;
   font-size: 22px;
+  overflow: hidden;
 }
 
-.animal-icon.mystery {
-  background-color: #e2d7c8;
-  color: #8c735e;
-  font-weight: bold;
-  font-size: 18px;
+.animal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .btn-start-focus {
   width: 100%;
-  padding: 16px;
-  background-color: #5c8442;
-  color: white;
-  border: none;
-  border-radius: 14px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
   margin-top: 30px;
-  transition: background-color 0.2s;
+  padding: 12px 20px;
+  background: #5c8442;
+  border: 2px solid #3b572a;
+  border-radius: 60px;
+  color: white;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0px 6px 0 #3b572a;
+  transition: all 0.1s ease-in-out;
 }
 
-.btn-start-focus:hover {
-  background-color: #4a6c35;
+.btn-start-focus:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #3b572a;
 }

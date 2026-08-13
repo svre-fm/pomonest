@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare } from '@fortawesome/free-regular-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+import { faHouse } from '@fortawesome/free-regular-svg-icons';
+import { faClock } from '@fortawesome/free-regular-svg-icons';
+import { faEgg } from '@fortawesome/free-solid-svg-icons';
 import '../home.css';
 import '../select.css';
 import '../focus.css';
-
 
 // =========================================
 // Interfaces (กำหนดประเภทข้อมูล)
@@ -27,6 +32,7 @@ interface Egg {
   timeRequired: number;
   desc: string;
   animals: string[];
+  imageStage1: string;
 }
 
 export default function Home() {
@@ -51,9 +57,12 @@ export default function Home() {
 
   // ข้อมูลไข่ 3 ระดับ
   const eggs: Egg[] = [
-    { id: 'common', name: 'Forest Egg', tier: 'Common', timeRequired: 60, desc: 'A mysterious egg from the forest. You might hatch something cute!', animals: ['🐻', '🦊', '🐺'] },
-    { id: 'rare', name: 'Mountain Egg', tier: 'Rare', timeRequired: 120, desc: 'A sturdy egg found high in the mountains. Holds rare creatures.', animals: ['🦅', '🐐', '🐆'] },
-    { id: 'epic', name: 'Golden Egg', tier: 'Epic', timeRequired: 240, desc: 'A glowing golden egg. Extremely rare and valuable.', animals: ['🐉', '🦄', '🦁'] }
+    { id: 'common', name: 'Small Egg', tier: 'Common', timeRequired: 60, desc: 'common eggs description', 
+      animals: ['/images/eggs/c1.png', '/images/eggs/c2.png', '/images/eggs/c3.png'], imageStage1: '/images/eggs/common.png' },
+    { id: 'rare', name: 'Cutie Egg', tier: 'Rare', timeRequired: 120, desc: 'rare eggs description', 
+      animals: ['/images/eggs/r1.png', '/images/eggs/r2.png', '/images/eggs/r3.png'], imageStage1: '/images/eggs/rare.png' },
+    { id: 'epic', name: 'Fantastic Egg', tier: 'Epic', timeRequired: 240, desc: 'epic eggs description', 
+      animals: ['/images/eggs/e1.png', '/images/eggs/e2.png', '/images/eggs/e3.png'], imageStage1: '/images/eggs/epic.png' }
   ];
   
   // State สำหรับฟอร์ม (สร้าง / แก้ไข Task)
@@ -64,6 +73,7 @@ export default function Home() {
   // State สำหรับสร้าง Category ใหม่
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#7fa65a'); // สีเริ่มต้น
 
   // State สำหรับ Dropdown Category ในหน้า Home
   const [expandedCategories, setExpandedCategories] = useState<string[]>(categories.map(c => c.id));
@@ -120,11 +130,12 @@ export default function Home() {
     const newCat = {
       id: Date.now().toString(),
       name: newCategoryName,
-      color: '#7fa65a' 
+      color: newCategoryColor // ใช้สีที่ผู้ใช้เลือก
     };
     setCategories([...categories, newCat]);
     setNewTaskCategoryId(newCat.id);
     setNewCategoryName('');
+    setNewCategoryColor('#7fa65a'); // รีเซ็ตสีกลับเป็นค่าเริ่มต้น
     setIsAddingNewCategory(false);
   };
 
@@ -195,13 +206,13 @@ export default function Home() {
         </div>
         <div className="nav-menu">
           <div className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-            🏠 Home
+            <FontAwesomeIcon icon={faHouse} /> Home
           </div>
           <div className={`nav-item ${activeTab === 'focus' ? 'active' : ''}`} onClick={() => setActiveTab('focus')}>
-            ⏱️ Focus
+            <FontAwesomeIcon icon={faClock} /> Focus
           </div>
           <div className={`nav-item ${activeTab === 'collection' ? 'active' : ''}`} onClick={() => setActiveTab('collection')}>
-            🐣 Collection
+            <FontAwesomeIcon icon={faEgg} /> Collection
           </div>
         </div>
       </div>
@@ -214,7 +225,7 @@ export default function Home() {
           <>
             <div className="dashboard-header">
               <div className="welcome-text">
-                <h1>Good morning, User! ☀️</h1>
+                <h1>Good morning, User!</h1>
                 <p>Ready to focus and hatch today?</p>
               </div>
               
@@ -245,21 +256,16 @@ export default function Home() {
                 <div className="card-header">
                   <h2 className="card-title">Today's Tasks</h2>
                 </div>
-                
                 <button 
-                  style={{ 
-                    width: '100%', padding: '12px', marginBottom: '15px', 
-                    backgroundColor: '#ded65a', color: '#4a3320', 
-                    border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' 
-                  }}
+                  className="btn-todo"
                   onClick={() => {
                     setEditingId(null);
                     setNewTaskText('');
                     setActiveTab('create-todo');
                   }}
-                >
-                  + New Todo
-                </button>
+                  >
+                    + New Todo
+                  </button>
 
                 <div className="task-list">
                   {categories.map(category => {
@@ -303,8 +309,12 @@ export default function Home() {
                                 </div>
                                 
                                 <div className="task-actions">
-                                  <button className="icon-btn" onClick={(e) => startEdit(task, e)}>✏️</button>
-                                  <button className="icon-btn" onClick={(e) => deleteTask(task.id, e)}>🗑️</button>
+                                  <button className="icon-btn" onClick={(e) => startEdit(task, e)}>
+                                    <FontAwesomeIcon icon={faPenToSquare} />
+                                  </button>
+                                  <button className="icon-btn" onClick={(e) => deleteTask(task.id, e)}>
+                                    <FontAwesomeIcon icon={faTrashCan} />
+                                  </button>
                                 </div>
                               </div>
                             ))}
@@ -344,12 +354,12 @@ export default function Home() {
           <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '100%' }}>
             <div className="card" style={{ maxWidth: '600px', width: '100%', marginTop: '20px', height: 'auto' }}>
               
-              <button 
-                onClick={resetForm} 
-                style={{ background: 'none', border: 'none', color: '#8c735e', cursor: 'pointer', marginBottom: '20px', fontSize: '16px', padding: 0, display: 'flex', alignItems: 'center' }}
-              >
-                ← Back to Dashboard
-              </button>
+              <div className="back-btn-wrapper" onClick={resetForm}>
+                <div className="btn-back-circle">
+                  ←
+                </div>
+                <span>Back to Dashboard</span>
+              </div>
 
               <h2 className="card-title" style={{ fontSize: '24px', marginBottom: '25px' }}>
                 {editingId ? 'Edit Todo' : 'Create New Todo'}
@@ -378,17 +388,24 @@ export default function Home() {
                 </label>
 
                 {isAddingNewCategory ? (
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input 
+                      type="color" 
+                      className="color-picker-input"
+                      value={newCategoryColor}
+                      onChange={(e) => setNewCategoryColor(e.target.value)}
+                      title="Choose Category Color"
+                    />
                     <input 
                       type="text" 
-                      style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2d7c8', fontSize: '16px', outline: 'none' }}
+                      style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '2px solid #e2d7c8', fontSize: '16px', outline: 'none' }}
                       placeholder="Enter new category name..."
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                     />
                     <button 
                       onClick={handleAddNewCategory} 
-                      style={{ padding: '10px 20px', backgroundColor: '#7fa65a', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                      className="btn-add"
                     >
                       Add
                     </button>
@@ -397,7 +414,7 @@ export default function Home() {
                   <select 
                     value={newTaskCategoryId}
                     onChange={(e) => setNewTaskCategoryId(e.target.value)}
-                    style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2d7c8', fontSize: '16px', outline: 'none', backgroundColor: 'white' }}
+                    style={{ padding: '12px', borderRadius: '8px', border: '2px solid #e2d7c8', fontSize: '16px', outline: 'none', backgroundColor: 'white' }}
                   >
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -408,7 +425,7 @@ export default function Home() {
 
               <button 
                 onClick={saveTask} 
-                style={{ width: '100%', padding: '15px', fontSize: '16px', backgroundColor: '#5c8442', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                className="btn-save"
               >
                 {editingId ? 'Update Task' : 'Save & Add Task'}
               </button>
@@ -421,7 +438,13 @@ export default function Home() {
         {activeTab === 'select-egg' && (
           <div className="select-egg-view">
              <div className="egg-header">
-                <button className="back-btn" onClick={() => setActiveTab('home')}>←</button>
+                <div 
+                  className="btn-back-circle" 
+                  onClick={() => setActiveTab('home')}
+                  style={{ marginRight: '20px', cursor: 'pointer' }}
+                >
+                  ←
+                </div>
                 <div>
                   <h2>Select an Egg</h2>
                   <p>Choose an egg to hatch with your focus time for: <strong>{focusTask?.text}</strong></p>
@@ -430,7 +453,7 @@ export default function Home() {
 
              <div className="egg-content-wrapper">
                 
-                {/* Left: กล่องการ์ดไข่ */}
+                {/* กล่องการ์ดไข่ */}
                 <div className="egg-cards-container">
                   {eggs.map(egg => (
                     <div 
@@ -439,10 +462,10 @@ export default function Home() {
                       onClick={() => setSelectedEggId(egg.id)}
                     >
                       <div className="egg-image-placeholder">
-                        {egg.tier === 'Common' ? '🥚' : egg.tier === 'Rare' ? '🪨' : '✨'}
+                        <img src={egg.imageStage1} alt={egg.name} className="egg-display-img" />  
                       </div>
                       <h3>{egg.name}</h3>
-                      <p className="egg-tier">{egg.tier} Tier</p>
+                      <p className="egg-tier">{egg.tier}</p>
                       <p className="egg-time">{egg.timeRequired} min required</p>
                       
                       <div className="egg-progress-bg">
@@ -452,7 +475,7 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Right: ข้อมูลไข่และปุ่ม Start Focus */}
+                {/* ข้อมูลไข่และปุ่ม Start Focus */}
                 <div className="egg-info-panel">
                    {(() => {
                      const currentEgg = eggs.find(e => e.id === selectedEggId)!;
@@ -463,14 +486,15 @@ export default function Home() {
                          
                          <h4>Possible Animals</h4>
                          <div className="animal-icons-row">
-                           {currentEgg.animals.map((emoji, i) => (
-                             <div key={i} className="animal-icon">{emoji}</div>
+                           {currentEgg.animals.map((imgPath, i) => (
+                             <div key={i} className="animal-icon" style={{ overflow: 'hidden' }}>
+                               <img src={imgPath} alt="Animal" className="animal-img" />
+                             </div>
                            ))}
-                           <div className="animal-icon mystery">?</div>
                          </div>
 
                          <button 
-                            className="btn-start-focus"
+                            className="btn-save"
                             onClick={() => {
                               setTimeLeft(currentEgg.timeRequired * 60);
                               setIsTimerRunning(true);
