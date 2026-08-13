@@ -293,7 +293,7 @@ export default function Reset() {
                     className="btn-back"
                     disabled={loading}
                     >
-                    {loading ? "Sending..." : "Reset password"}
+                    {loading ? "Reset..." : "Reset password"}
                     </button>
 
                 </form>
