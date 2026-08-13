@@ -88,7 +88,7 @@ export default function Verify() {
 
                         <p className="verify-subtext">
                         Please check your inbox and click the link
-                        to activate your account.
+                        to activate your account.<br/>If it doesn't arrive, be sure to check your spam folder.
                         </p>
                     </>
                     )}

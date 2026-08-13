@@ -45,7 +45,7 @@ export default function Register() {
 
         try {
         const response = await fetch(
-            'http://localhost:3001/api/auth/register',
+            '/api/auth/register',
             {
             method: 'POST',
             headers: {

@@ -748,3 +748,68 @@ a {
   font-size: 20px;
   text-decoration: none;
 }
+
+/* resetpassword */
+.email-input {
+  width: 80%;
+  padding: 12px 15px;
+  margin-bottom: -5px;
+  border-radius: 8px;
+  border: 2px solid #8e6c4a;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.cancel-link {
+  display: block;
+  color: #d43c5d;
+  font-size: 15px;
+  font-weight: 400;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 20px;
+}
+
+.reset-form {
+  align-items: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+}
+
+.password-input {
+  position: relative;
+  width: 100%;
+}
+
+.password-input .auth-input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: -5px;
+  border-radius: 8px;
+  border: 2px solid #8e6c4a;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.reset-text {
+  color: #4a3018;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.5;
+}

@@ -10,6 +10,7 @@ import Focus from './pages/Focus';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
+import Reset from './pages/reset';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -45,6 +46,13 @@ function App() {
           path="/verify"
           element={<Verify />}
         />
+
+        {/* resetpassword */}
+        <Route
+          path='/reset'
+          element={<Reset />}
+        />
+      
 
         {/* Focus */}
         <Route
