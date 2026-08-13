@@ -12,6 +12,13 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
 ) {
+
+  const backendUrl = process.env.BACKEND_URL;
+
+  if (!backendUrl) {
+    throw new Error("BACKEND_URL is not configured");
+  }
+
   const verifyUrl =
     `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`;
 
