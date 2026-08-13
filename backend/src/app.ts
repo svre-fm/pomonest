@@ -17,16 +17,22 @@ import {
 } from "@db/schema.js";
 import cors from "cors";
 import { hashPassword, verifyPassword } from "./auth/password.js";
-import {randomUUID} from "node:crypto";
-import { sendVerificationEmail } from "./service/mail.service.js";
+import { randomUUID } from "node:crypto";
+import { sendVerificationEmail, sendResetPasswordEmail } from "./service/mail.service.js";
 import { startCleanupJob } from "./jobs/cleanup-unverified-users.js";
+import { signToken } from "./auth/jwt.js";
+import { requireAuth } from "./auth/middleware.js";
+
+// In-memory store for reset password tokens (token -> { email, expiresAt })
+// In production, move this to Redis or a DB table
+const resetTokenStore = new Map<string, { email: string; expiresAt: Date }>();
 
 const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
 const frontendUrl =
       process.env.FRONTEND_URL || `http://localhost:${PORTFRONT}`;
 
-// อ้างอิงตารางข้อมูลทั้งหมดตาม schema ของเพื่อน
+// Reference all data tables from schema
 const dataTables = {
   users,
   categories,
@@ -58,6 +64,7 @@ app.use(
   cors({
     origin: [
       `http://localhost:${PORTFRONT}`,
+      "http://localhost:5173",        // Vite dev server
       "http://fsg12.cpecmu.com",
       "https://fsg12.cpecmu.com",
     ],
@@ -71,7 +78,7 @@ app.options(/.*/, cors());
 app.use(express.json());
 
 // ==========================================
-// API: สมัครสมาชิก
+// API: Register
 // ==========================================
 app.post("/api/auth/register", async (req: Request, res: Response) => {
   try {
@@ -79,12 +86,12 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
 
     if (!username || !email || !password) {
       return res.status(400).json({
-        error: "username, email และ password จำเป็นต้องกรอก",
+        error: "username, email and password are required",
       });
     }
 
     const existing = await dbClient
-      .select({ 
+      .select({
         id: users.id,
         emailVerified: users.emailVerified
       })
@@ -93,7 +100,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
       .limit(1);
 
     if (existing.length > 0) {
-      return res.status(409).json({ error: "email หรือ username ถูกใช้แล้ว" });
+      return res.status(409).json({ error: "Email or username is already taken" });
     }
 
     const token = randomUUID();
@@ -107,29 +114,39 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
         email,
         password: hashedPassword,
         avatar: avatar ?? null,
-
         emailVerified: false,
         verificationToken: token,
         verificationExpire: new Date(Date.now() + 5 * 60 * 1000),
       })
       .returning();
-      console.log(new Date(Date.now() + 5 * 60 * 1000));
 
-    //send token to email
-    await sendVerificationEmail(email, token);
+    // Always log verify URL to console (works even without email config)
+    const verifyUrl = `${process.env.BACKEND_URL || `http://localhost:${process.env.BACKEND_PORT || 3001}`}/api/auth/verify?token=${token}`;
+    console.log(`\n========================================`);
+    console.log(`[REGISTER] User: ${email}`);
+    console.log(`[REGISTER] Verify URL: ${verifyUrl}`);
+    console.log(`[REGISTER] Or use API: GET /api/dev/verify-email?email=${email}`);
+    console.log(`========================================\n`);
+
+    // Send real email (skipped gracefully if not configured)
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (mailErr) {
+      console.warn("[REGISTER] Email could not be sent (see console for verify URL):", (mailErr as Error).message);
+    }
 
     res.status(201).json({
-      message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+      message: "Registration successful! Check server console for the verification link.",
       data: formatUser(newUser),
     });
   } catch (error) {
     console.error("Error registering user:", error);
-    res.status(500).json({ error: "ไม่สามารถสมัครสมาชิกได้" });
+    res.status(500).json({ error: "Failed to register user" });
   }
 });
 
 // ==========================================
-// API: ยืนยัน Email
+// API: Verify Email
 // ==========================================
 app.get("/api/auth/verify", async (req: Request, res: Response) => {
   try {
@@ -146,12 +163,12 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!user) {
-      //token หมดอายุ
+      // Token not found or expired
       return res.redirect(`${frontendUrl}/verify?status=invalid`);
     }
 
     if (user.emailVerified) {
-      // ยืนยัน eamil แล้ว
+      // Already verified
       return res.redirect(`${frontendUrl}/verify?status=already`);
     }
 
@@ -171,31 +188,64 @@ app.get("/api/auth/verify", async (req: Request, res: Response) => {
       })
       .where(eq(users.id, user.id));
 
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/verify?status=success`
-    );
+    return res.redirect(`${process.env.FRONTEND_URL}/verify?status=success`);
   } catch (error) {
     console.error("Verify error:", error);
-
     return res.redirect(`${frontendUrl}/verify?status=error`);
-
   }
 });
 
 // ==========================================
-// API: ล็อกอิน (รองรับ id / username / email + password)
+// DEV ONLY: Bypass email verification without psql
+// Example: GET /api/dev/verify-email?email=test@test.com
+// ==========================================
+app.get("/api/dev/verify-email", async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Not allowed in production" });
+  }
+
+  const { email } = req.query;
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ error: "Please provide ?email=..." });
+  }
+
+  const [user] = await dbClient
+    .select({ id: users.id, email: users.email, emailVerified: users.emailVerified })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  if (!user) {
+    return res.status(404).json({ error: `User not found: ${email}` });
+  }
+
+  if (user.emailVerified) {
+    return res.status(200).json({ message: `${email} is already verified` });
+  }
+
+  await dbClient
+    .update(users)
+    .set({ emailVerified: true, verificationToken: null, verificationExpire: null })
+    .where(eq(users.email, email));
+
+  return res.status(200).json({ message: `✅ Email verified: ${email} — you can now log in` });
+});
+
+// ==========================================
+// API: Login (accepts id / username / email + password)
+// Supports rememberMe: true → JWT expires in 30d, false → 1d
 // ==========================================
 app.post("/api/auth/login", async (req: Request, res: Response) => {
   try {
-    const { id, username, email, password } = req.body;
+    const { id, username, email, password, rememberMe } = req.body;
 
     if (!password) {
-      return res.status(400).json({ error: "password จำเป็นต้องกรอก" });
+      return res.status(400).json({ error: "Password is required" });
     }
 
     if (!id && !username && !email) {
       return res.status(400).json({
-        error: "ต้องระบุ id, username หรือ email อย่างน้อย 1 อย่าง",
+        error: "Must provide at least one of: id, username, or email",
       });
     }
 
@@ -211,33 +261,192 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
       .limit(1);
 
     if (!user) {
-      return res.status(401).json({ error: "ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const isValid = await verifyPassword(password, user.password);
 
     if (!isValid) {
-      return res.status(401).json({ error: "ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     if (!user.emailVerified) {
       return res.status(403).json({
-        error: "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ",
-    });
+        error: "Please verify your email before logging in",
+      });
     }
 
+    // Issue JWT token — rememberMe = true → 30 days, false → 1 day
+    const token = signToken(
+      { userId: user.id, email: user.email, username: user.username },
+      Boolean(rememberMe)
+    );
+
     res.status(200).json({
-      message: "ล็อกอินสำเร็จ",
+      message: "Login successful",
+      token,
+      expiresIn: rememberMe ? "30d" : "1d",
       data: formatUser(user),
     });
   } catch (error) {
     console.error("Error logging in:", error);
-    res.status(500).json({ error: "ไม่สามารถล็อกอินได้" });
+    res.status(500).json({ error: "Failed to log in" });
   }
 });
 
 // ==========================================
-// API: ดึงข้อมูลผู้ใช้ตาม id
+// API: Get current user from JWT (Protected Route)
+// ==========================================
+app.get("/api/auth/me", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const [user] = await dbClient
+      .select()
+      .from(users)
+      .where(eq(users.id, req.user!.userId))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User fetched successfully",
+      data: formatUser(user),
+    });
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+// ==========================================
+// API: Forgot Password — ส่ง reset link ทางอีเมล
+// ==========================================
+app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "กรุณาระบุอีเมล" });
+    }
+
+    const [user] = await dbClient
+      .select({ id: users.id, email: users.email, emailVerified: users.emailVerified })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    // ตอบกลับเหมือนกันเสมอ เพื่อป้องกัน user enumeration
+    if (!user || !user.emailVerified) {
+      return res.status(200).json({
+        message: "send emil fail",
+        error: "Email not found!!"
+      });
+    }
+
+    // สร้าง token แบบ UUID
+    const resetToken = randomUUID();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 นาที
+
+    // เก็บ token ไว้ใน memory (key = token)
+    resetTokenStore.set(resetToken, { email, expiresAt });
+
+    // ส่งอีเมลพร้อม reset link
+    await sendResetPasswordEmail(email, resetToken);
+
+    res.status(200).json({
+      message: "หากอีเมลนี้มีในระบบ คุณจะได้รับลิงก์รีเซ็ตรหัสผ่าน",
+    });
+  } catch (error) {
+    console.error("Error in forgot-password:", error);
+    res.status(500).json({ error: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+  }
+});
+
+// ==========================================
+// API: Reset Password — ผู้ใช้คลิก link จากอีเมล (GET) redirect ไปหน้า frontend
+// ==========================================
+app.get("/api/auth/reset-password", async (req: Request, res: Response) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res.redirect(`${frontendUrl}/reset-password?status=invalid`);
+  }
+
+  const stored = resetTokenStore.get(token);
+
+  if (!stored) {
+    return res.redirect(`${frontendUrl}/reset-password?status=invalid`);
+  }
+
+  if (stored.expiresAt < new Date()) {
+    resetTokenStore.delete(token);
+    return res.redirect(`${frontendUrl}/reset-password?status=expired`);
+  }
+
+  // ส่ง token ไปให้ frontend เพื่อกรอกรหัสผ่านใหม่
+  return res.redirect(`${frontendUrl}/reset-password?token=${token}`);
+});
+
+// ==========================================
+// API: Reset Password — บันทึกรหัสผ่านใหม่ (POST)
+// ==========================================
+app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        error: "Token and new password are required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters long",
+      });
+    }
+
+    const stored = resetTokenStore.get(token);
+
+    if (!stored) {
+      return res.status(400).json({
+        error: "Invalid or expired reset link. Please request a new one",
+      });
+    }
+
+    if (stored.expiresAt < new Date()) {
+      resetTokenStore.delete(token);
+
+      return res.status(400).json({
+        error: "Reset link has expired. Please request a new one",
+      });
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await dbClient
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.email, stored.email));
+
+    // Delete token after successful password reset
+    resetTokenStore.delete(token);
+
+    res.status(200).json({
+      message: "Password changed successfully. Please log in again",
+    });
+  } catch (error) {
+    console.error("Error in reset-password:", error);
+
+    res.status(500).json({
+      error: "Something went wrong. Please try again later",
+    });
+  }
+});
+
+// ==========================================
+// API: Get user by ID
 // ==========================================
 app.get("/api/auth/user/:id", async (req: Request, res: Response) => {
   try {
@@ -249,26 +458,26 @@ app.get("/api/auth/user/:id", async (req: Request, res: Response) => {
       .where(eq(users.id, userId))
       .limit(1);
 
-    if (user.emailVerified) {
-    return res.send("Email นี้ได้รับการยืนยันแล้ว");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    if (!user) {
-      return res.status(404).json({ error: "ไม่พบผู้ใช้" });
+    if (user.emailVerified) {
+      return res.send("This email has already been verified");
     }
 
     res.status(200).json({
-      message: "ดึงข้อมูลผู้ใช้สำเร็จ",
+      message: "User fetched successfully",
       data: formatUser(user),
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    res.status(500).json({ error: "ไม่สามารถดึงข้อมูลผู้ใช้ได้" });
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 });
 
 // ==========================================
-// API: รายชื่อตารางข้อมูลที่ backend รองรับ
+// API: List available data tables
 // ==========================================
 app.get("/api/data/tables", (_req: Request, res: Response) => {
   const tables = Object.entries(dataTables).map(([name, table]) => ({
@@ -277,13 +486,13 @@ app.get("/api/data/tables", (_req: Request, res: Response) => {
   }));
 
   res.status(200).json({
-    message: "รายชื่อตารางข้อมูล",
+    message: "Data tables retrieved",
     data: tables,
   });
 });
 
 // ==========================================
-// API 1: บันทึกประวัติการจับเวลา (เรียกตอนกด Stop)
+// API: Save focus session (called on Stop)
 // ==========================================
 app.post("/api/timer/save", async (req: Request, res: Response) => {
   try {
@@ -320,10 +529,10 @@ app.post("/api/timer/save", async (req: Request, res: Response) => {
         taskId: newSession[0].taskId,
         activityId: newSession[0].activityId,
         userEggId: newSession[0].userEggId,
-        startTime: newSession[0].startTime.toLocaleString("th-TH", {
+        startTime: newSession[0].startTime.toLocaleString("en-US", {
           timeZone: "Asia/Bangkok",
         }),
-        endTime: newSession[0].endTime.toLocaleString("th-TH", {
+        endTime: newSession[0].endTime.toLocaleString("en-US", {
           timeZone: "Asia/Bangkok",
         }),
         duration: newSession[0].duration,
@@ -338,7 +547,7 @@ app.post("/api/timer/save", async (req: Request, res: Response) => {
 });
 
 // ==========================================
-// API 2: ดึงประวัติการจับเวลาทั้งหมด
+// API: Get all focus session history
 // ==========================================
 app.get("/api/timer/history", async (req: Request, res: Response) => {
   try {
@@ -358,7 +567,7 @@ app.get("/api/timer/history", async (req: Request, res: Response) => {
 });
 
 // ==========================================
-// เริ่มการทำงานของ Server
+// Start Server
 // ==========================================
 const PORT = process.env.BACKEND_PORT || 3001;
 
