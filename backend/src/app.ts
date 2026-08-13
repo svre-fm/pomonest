@@ -327,39 +327,47 @@ app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ error: "กรุณาระบุอีเมล" });
+      return res.status(400).json({
+        error: "Email is required",
+      });
     }
 
     const [user] = await dbClient
-      .select({ id: users.id, email: users.email, emailVerified: users.emailVerified })
+      .select({
+        id: users.id,
+        email: users.email,
+        emailVerified: users.emailVerified,
+      })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
-    // ตอบกลับเหมือนกันเสมอ เพื่อป้องกัน user enumeration
+    // Return the same response to prevent user enumeration
     if (!user || !user.emailVerified) {
       return res.status(200).json({
-        message: "send emil fail",
-        error: "Email not found!!"
+        message: "If this email exists in our system, you will receive a password reset link.",
       });
     }
 
-    // สร้าง token แบบ UUID
+    // Generate a UUID reset token
     const resetToken = randomUUID();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 นาที
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // เก็บ token ไว้ใน memory (key = token)
+    // Store the token in memory
     resetTokenStore.set(resetToken, { email, expiresAt });
 
-    // ส่งอีเมลพร้อม reset link
+    // Send reset link via email
     await sendResetPasswordEmail(email, resetToken);
 
     res.status(200).json({
-      message: "หากอีเมลนี้มีในระบบ คุณจะได้รับลิงก์รีเซ็ตรหัสผ่าน",
+      message: "If this email exists in our system, you will receive a password reset link.",
     });
   } catch (error) {
     console.error("Error in forgot-password:", error);
-    res.status(500).json({ error: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+
+    res.status(500).json({
+      error: "Something went wrong. Please try again later.",
+    });
   }
 });
 
