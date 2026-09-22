@@ -6,7 +6,6 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-import Focus from './pages/Focus';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/Verify';
@@ -24,7 +23,8 @@ function App() {
           path="/login"
           element={
             isLoggedIn ? (
-              <Navigate to="/focus" replace />
+              // เปลี่ยนให้ Redirect ไปที่ /home เมื่อล็อกอินสำเร็จ
+              <Navigate to="/home" replace /> 
             ) : (
               <Login
                 onLoginSuccess={() =>
@@ -47,27 +47,13 @@ function App() {
           element={<Verify />}
         />
 
-        {/* Focus */}
-        <Route
-          path="/focus"
-          element={
-            isLoggedIn ? (
-              <Focus />
-            ) : (
-              <Navigate
-                to="/login"
-                replace
-              />
-            )
-          }
-        />
-
-        {/* Home (ตั้งให้เข้าดูได้เลยโดยไม่ต้องเช็ค isLoggedIn ชั่วคราว) */}
+        {/* Home */}
         <Route
           path="/home"
           element={<Home />}
         />
         
+        {/* Fallback สำหรับ Route ที่ไม่มีอยู่จริง */}
         <Route
           path="*"
           element={
