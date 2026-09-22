@@ -20,6 +20,7 @@ export default function Login({
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // ----------------------------------------
   // Login
@@ -36,6 +37,7 @@ export default function Login({
       password,
       email: isEmail ? identifier : undefined,
       username: !isEmail ? identifier : undefined,
+      rememberMe,
     };
 
     try {
@@ -57,6 +59,15 @@ export default function Login({
       }
 
       console.log('Login Success:', data);
+
+      localStorage.setItem('authToken', data.token);
+
+      if (data.data) {
+        localStorage.setItem(
+          'authUser',
+          JSON.stringify(data.data)
+        );
+      }
 
       onLoginSuccess();
 
@@ -152,7 +163,11 @@ export default function Login({
 
             <div className="form-options">
               <label className="checkbox-container">
-                <input type="checkbox" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 Remember Me
               </label>
 

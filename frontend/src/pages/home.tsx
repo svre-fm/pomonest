@@ -22,6 +22,53 @@ interface Category {
 export default function Home() {
   const [activeTab, setActiveTab] = useState('home');
 
+  const [user, setUser] = useState<{
+    username: string;
+    avatar?: string;
+  } | null>(null);
+
+  // data user
+
+    useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('authToken');
+
+      if (!token) {
+        console.log('No auth token');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to fetch user');
+        }
+
+        console.log('Current user:', result.data);
+        setUser(result.data);
+      } catch (error) {
+        console.error('Fetch user error:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // logout
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+
+    window.location.href = '/login';
+  };
+
   // time
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -156,11 +203,19 @@ export default function Home() {
 
         {/* Profile ขวา */}
         <div className="profile-section">
-            <img
-            src="/images/profile1.png"
-            alt="Profile"
+          <img
+            src={user?.avatar || '/images/profile1.png'}
+            alt={user?.username || 'Profile'}
             className="profile-image"
-            />
+          />
+
+          <span className="profile-name">
+            {user?.username || 'Loading...'}
+          </span>
+
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
 
         </div>

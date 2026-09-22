@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -16,6 +16,54 @@ import Home from './pages/home';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+
+      if (!token) {
+        setCheckingAuth(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.data) {
+            localStorage.setItem(
+              'authUser',
+              JSON.stringify(data.data)
+            );
+          }
+
+          setIsLoggedIn(true);
+        } else {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsLoggedIn(false);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (checkingAuth) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <BrowserRouter>
@@ -69,12 +117,6 @@ function App() {
               />
             )
           }
-        />
-
-        {/* Home (ตั้งให้เข้าดูได้เลยโดยไม่ต้องเช็ค isLoggedIn ชั่วคราว) */}
-        <Route
-          path="/home"
-          element={<Home />}
         />
         
         <Route

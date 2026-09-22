@@ -502,10 +502,9 @@ app.get("/api/data/tables", (_req: Request, res: Response) => {
 // ==========================================
 // API: Save focus session (called on Stop)
 // ==========================================
-app.post("/api/timer/save", async (req: Request, res: Response) => {
+app.post("/api/timer/save", requireAuth, async (req: Request, res: Response) => {
   try {
     const {
-      userId,
       taskId,
       activityId,
       userEggId,
@@ -514,6 +513,8 @@ app.post("/api/timer/save", async (req: Request, res: Response) => {
       duration,
       status,
     } = req.body;
+
+    const userId = req.user!.userId;
 
     const newSession = await dbClient
       .insert(focusSessions)
