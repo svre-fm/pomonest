@@ -11,6 +11,7 @@ import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
 import Reset from './pages/reset';
+import Home from './pages/home'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -69,7 +70,12 @@ function App() {
           }
         />
 
-        {/* Default */}
+        {/* Home (ตั้งให้เข้าดูได้เลยโดยไม่ต้องเช็ค isLoggedIn ชั่วคราว) */}
+        <Route
+          path="/home"
+          element={<Home />}
+        />
+        
         <Route
           path="*"
           element={
@@ -86,4 +92,3 @@ function App() {
 }
 
 export default App;
-
