@@ -11,7 +11,7 @@ import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
 import Reset from './pages/reset';
-import Home from './pages/home'
+import Home from './pages/home';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,7 +25,7 @@ function App() {
           path="/login"
           element={
             isLoggedIn ? (
-              <Navigate to="/focus" replace />
+              <Navigate to="/home" replace />
             ) : (
               <Login
                 onLoginSuccess={() =>
