@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 
 import Focus from './pages/Focus';
+import Test from './pages/test';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
@@ -57,10 +58,10 @@ function App() {
 
         {/* Focus */}
         <Route
-          path="/focus"
+          path="/home"
           element={
             isLoggedIn ? (
-              <Focus />
+              <Home />
             ) : (
               <Navigate
                 to="/login"
@@ -84,6 +85,11 @@ function App() {
               replace
             />
           }
+        />
+
+        <Route
+          path="/test"
+          element={<Test />}
         />
 
       </Routes>
