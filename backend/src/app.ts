@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import type { Request, Response } from "express";
-import { desc, eq, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, or, type SQL } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
 import {
   users,
@@ -30,7 +30,7 @@ const resetTokenStore = new Map<string, { email: string; expiresAt: Date }>();
 const PORTFRONT = process.env.FRONTEND_PORT || 6012;
 
 const frontendUrl =
-      process.env.FRONTEND_URL || `http://localhost:${PORTFRONT}`;
+  process.env.FRONTEND_URL || `http://localhost:${PORTFRONT}`;
 
 // Reference all data tables from schema
 const dataTables = {
@@ -574,6 +574,537 @@ app.get("/api/timer/history", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch history" });
   }
 });
+// ==========================================
+// API: Categories (CRUD)
+// ==========================================
+
+// GET /api/categories - ดึง categories ของ user ที่ login
+app.get("/api/categories", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userCategories = await dbClient
+      .select()
+      .from(categories)
+      .where(eq(categories.userId, req.user!.userId));
+
+    res.status(200).json({
+      message: "Categories fetched successfully",
+      data: userCategories,
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+// POST /api/categories - สร้าง category ใหม่
+app.post("/api/categories", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { name, color } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Category name is required" });
+    }
+
+    const [newCategory] = await dbClient
+      .insert(categories)
+      .values({
+        userId: req.user!.userId,
+        name: name.trim(),
+        color: color ? String(color).trim() : "#7fa65a",
+      })
+      .returning();
+
+    res.status(201).json({
+      message: "Category created successfully",
+      data: newCategory,
+    });
+  } catch (error) {
+    console.error("Error creating category:", error);
+    res.status(500).json({ error: "Failed to create category" });
+  }
+});
+
+// PUT /api/categories/:id - แก้ไข category
+app.put("/api/categories/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const categoryId = String(req.params.id);
+    const { name, color } = req.body;
+
+    const [existing] = await dbClient
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    const updates: Partial<typeof categories.$inferInsert> = {};
+    if (name !== undefined) updates.name = String(name).trim();
+    if (color !== undefined) updates.color = String(color).trim();
+
+    const [updated] = await dbClient
+      .update(categories)
+      .set(updates)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, req.user!.userId)))
+      .returning();
+
+    res.status(200).json({
+      message: "Category updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating category:", error);
+    res.status(500).json({ error: "Failed to update category" });
+  }
+});
+
+// DELETE /api/categories/:id - ลบ category
+app.delete("/api/categories/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const categoryId = String(req.params.id);
+
+    const [existing] = await dbClient
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    // ถอด categoryId ออกจาก tasks ของหมวดนี้ก่อนลบ เพื่อไม่ให้ติด foreign key constraint
+    await dbClient
+      .update(tasks)
+      .set({ categoryId: null })
+      .where(eq(tasks.categoryId, categoryId));
+
+    await dbClient
+      .delete(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.userId, req.user!.userId)));
+
+    res.status(200).json({
+      message: "Category deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+});
+
+// ==========================================
+// API: Tasks (CRUD)
+// ==========================================
+
+// GET /api/tasks - ดึง tasks ทั้งหมดของ user
+app.get("/api/tasks", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userTasks = await dbClient
+      .select({
+        id: tasks.id,
+        userId: tasks.userId,
+        categoryId: tasks.categoryId,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+        title: tasks.title,
+        status: tasks.status,
+        dueDate: tasks.dueDate,
+        completedAt: tasks.completedAt,
+      })
+      .from(tasks)
+      .leftJoin(categories, eq(tasks.categoryId, categories.id))
+      .where(eq(tasks.userId, req.user!.userId))
+      .orderBy(desc(tasks.id));
+
+    res.status(200).json({
+      message: "Tasks fetched successfully",
+      data: userTasks,
+    });
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ error: "Failed to fetch tasks" });
+  }
+});
+
+// POST /api/tasks - สร้าง task ใหม่
+app.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { title, categoryId, dueDate, status } = req.body;
+
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return res.status(400).json({ error: "Task title is required" });
+    }
+
+    const taskStatus = status && ["todo", "doing", "done"].includes(status) ? status : "todo";
+
+    const [newTask] = await dbClient
+      .insert(tasks)
+      .values({
+        userId: req.user!.userId,
+        categoryId: categoryId || null,
+        title: title.trim(),
+        status: taskStatus,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        completedAt: taskStatus === "done" ? new Date() : null,
+      })
+      .returning();
+
+    res.status(201).json({
+      message: "Task created successfully",
+      data: newTask,
+    });
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(500).json({ error: "Failed to create task" });
+  }
+});
+
+// PUT /api/tasks/:id - แก้ไข task
+app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const taskId = String(req.params.id);
+    const { title, categoryId, dueDate, status, completedAt } = req.body;
+
+    const [existing] = await dbClient
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    const updates: Partial<typeof tasks.$inferInsert> = {};
+    if (title !== undefined) updates.title = String(title).trim();
+    if (categoryId !== undefined) updates.categoryId = categoryId || null;
+    if (dueDate !== undefined) updates.dueDate = dueDate ? new Date(dueDate) : null;
+
+    if (status !== undefined && ["todo", "doing", "done"].includes(status)) {
+      updates.status = status;
+      if (status === "done" && !existing.completedAt) {
+        updates.completedAt = completedAt ? new Date(completedAt) : new Date();
+      } else if (status !== "done") {
+        updates.completedAt = null;
+      }
+    } else if (completedAt !== undefined) {
+      updates.completedAt = completedAt ? new Date(completedAt) : null;
+    }
+
+    const [updated] = await dbClient
+      .update(tasks)
+      .set(updates)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .returning();
+
+    res.status(200).json({
+      message: "Task updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    res.status(500).json({ error: "Failed to update task" });
+  }
+});
+
+// PATCH /api/tasks/:id/status - อัปเดตสถานะ task (เช่น ติ๊กถูก done หรือ todo)
+app.patch("/api/tasks/:id/status", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const taskId = String(req.params.id);
+    const { status } = req.body;
+
+    if (!status || !["todo", "doing", "done"].includes(status)) {
+      return res.status(400).json({ error: "Valid status ('todo', 'doing', 'done') is required" });
+    }
+
+    const [existing] = await dbClient
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    const [updated] = await dbClient
+      .update(tasks)
+      .set({
+        status,
+        completedAt: status === "done" ? new Date() : null,
+      })
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .returning();
+
+    res.status(200).json({
+      message: "Task status updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating task status:", error);
+    res.status(500).json({ error: "Failed to update task status" });
+  }
+});
+
+// DELETE /api/tasks/:id - ลบ task
+app.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const taskId = String(req.params.id);
+
+    const [existing] = await dbClient
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    await dbClient
+      .delete(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)));
+
+    res.status(200).json({
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    res.status(500).json({ error: "Failed to delete task" });
+  }
+});
+
+// ==========================================
+// API: User Animals (Collection)
+// ==========================================
+
+// GET /api/user-animals - ดึงสัตว์ที่ user ครอบครอง
+app.get("/api/user-animals", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userOwnedAnimals = await dbClient
+      .select({
+        id: userAnimals.id,
+        userId: userAnimals.userId,
+        animalId: userAnimals.animalId,
+        nickname: userAnimals.nickname,
+        obtainedAt: userAnimals.obtainedAt,
+        animalName: animals.name,
+        animalRarity: animals.rarity,
+        animalImage: animals.image,
+      })
+      .from(userAnimals)
+      .innerJoin(animals, eq(userAnimals.animalId, animals.id))
+      .where(eq(userAnimals.userId, req.user!.userId))
+      .orderBy(desc(userAnimals.obtainedAt));
+
+    res.status(200).json({
+      message: "User animals fetched successfully",
+      data: userOwnedAnimals,
+    });
+  } catch (error) {
+    console.error("Error fetching user animals:", error);
+    res.status(500).json({ error: "Failed to fetch user animals" });
+  }
+});
+
+// ==========================================
+// API: Master Data (Eggs, Egg Rewards, Animals, User Eggs)
+// ==========================================
+
+// GET /api/eggs - ดึงข้อมูลไข่ทั้งหมด
+app.get("/api/eggs", async (_req: Request, res: Response) => {
+  try {
+    const allEggs = await dbClient.select().from(eggs);
+    res.status(200).json({
+      message: "Eggs fetched successfully",
+      data: allEggs,
+    });
+  } catch (error) {
+    console.error("Error fetching eggs:", error);
+    res.status(500).json({ error: "Failed to fetch eggs" });
+  }
+});
+
+// GET /api/animals - ดึงข้อมูลสัตว์ทั้งหมด
+app.get("/api/animals", async (_req: Request, res: Response) => {
+  try {
+    const allAnimals = await dbClient.select().from(animals);
+    res.status(200).json({
+      message: "Animals fetched successfully",
+      data: allAnimals,
+    });
+  } catch (error) {
+    console.error("Error fetching animals:", error);
+    res.status(500).json({ error: "Failed to fetch animals" });
+  }
+});
+
+// GET /api/egg-rewards - ดึงข้อมูลรางวัลไข่ (เชื่อมไข่กับสัตว์และอัตราดรอป)
+app.get("/api/egg-rewards", async (req: Request, res: Response) => {
+  try {
+    const { eggId } = req.query;
+
+    let query = dbClient
+      .select({
+        id: eggRewards.id,
+        eggId: eggRewards.eggId,
+        eggName: eggs.name,
+        animalId: eggRewards.animalId,
+        animalName: animals.name,
+        animalRarity: animals.rarity,
+        animalImage: animals.image,
+        dropRate: eggRewards.dropRate,
+      })
+      .from(eggRewards)
+      .innerJoin(eggs, eq(eggRewards.eggId, eggs.id))
+      .innerJoin(animals, eq(eggRewards.animalId, animals.id));
+
+    if (eggId && typeof eggId === "string") {
+      const rewards = await query.where(eq(eggRewards.eggId, eggId));
+      return res.status(200).json({
+        message: "Egg rewards fetched successfully",
+        data: rewards,
+      });
+    }
+
+    const rewards = await query;
+    res.status(200).json({
+      message: "Egg rewards fetched successfully",
+      data: rewards,
+    });
+  } catch (error) {
+    console.error("Error fetching egg rewards:", error);
+    res.status(500).json({ error: "Failed to fetch egg rewards" });
+  }
+});
+
+// GET /api/user-eggs - ดึงไข่ของ user ที่ login (ประวัติและที่กำลังฟัก)
+app.get("/api/user-eggs", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const myEggs = await dbClient
+      .select({
+        id: userEggs.id,
+        userId: userEggs.userId,
+        eggId: userEggs.eggId,
+        eggName: eggs.name,
+        eggRequired: eggs.required,
+        eggImage: eggs.image,
+        progress: userEggs.progress,
+        status: userEggs.status,
+        startTime: userEggs.startTime,
+        hatchedAt: userEggs.hatchedAt,
+      })
+      .from(userEggs)
+      .innerJoin(eggs, eq(userEggs.eggId, eggs.id))
+      .where(eq(userEggs.userId, req.user!.userId))
+      .orderBy(desc(userEggs.startTime));
+
+    res.status(200).json({
+      message: "User eggs fetched successfully",
+      data: myEggs,
+    });
+  } catch (error) {
+    console.error("Error fetching user eggs:", error);
+    res.status(500).json({ error: "Failed to fetch user eggs" });
+  }
+});
+
+// ==========================================
+// DEV ONLY: Seed initial master data (Eggs & Animals & Rewards)
+// POST /api/dev/seed-master-data
+// ==========================================
+app.post("/api/dev/seed-master-data", async (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Not allowed in production" });
+  }
+
+  try {
+    const existingEggs = await dbClient.select().from(eggs);
+    if (existingEggs.length > 0) {
+      return res.status(200).json({
+        message: "Master data already exists in database",
+        eggsCount: existingEggs.length,
+      });
+    }
+
+    // 1. Insert Eggs
+    const [commonEgg] = await dbClient
+      .insert(eggs)
+      .values({
+        name: "Small Egg",
+        required: 60,
+        image: "/images/eggs/common.png",
+      })
+      .returning();
+
+    const [rareEgg] = await dbClient
+      .insert(eggs)
+      .values({
+        name: "Cutie Egg",
+        required: 120,
+        image: "/images/eggs/rare.png",
+      })
+      .returning();
+
+    const [epicEgg] = await dbClient
+      .insert(eggs)
+      .values({
+        name: "Fantastic Egg",
+        required: 240,
+        image: "/images/eggs/epic.png",
+      })
+      .returning();
+
+    // 2. Insert Animals
+    const insertedAnimals = await dbClient
+      .insert(animals)
+      .values([
+        { name: "Chick", rarity: "common", image: "/images/eggs/c1.png" },
+        { name: "Bunny", rarity: "common", image: "/images/eggs/c2.png" },
+        { name: "Duckling", rarity: "common", image: "/images/eggs/c3.png" },
+        { name: "Fox", rarity: "rare", image: "/images/eggs/r1.png" },
+        { name: "Panda", rarity: "rare", image: "/images/eggs/r2.png" },
+        { name: "Koala", rarity: "rare", image: "/images/eggs/r3.png" },
+        { name: "Dragon", rarity: "epic", image: "/images/eggs/e1.png" },
+        { name: "Phoenix", rarity: "epic", image: "/images/eggs/e2.png" },
+        { name: "Unicorn", rarity: "epic", image: "/images/eggs/e3.png" },
+      ])
+      .returning();
+
+    // 3. Insert Egg Rewards
+    const cAnimals = insertedAnimals.filter((a) => a.rarity === "common");
+    const rAnimals = insertedAnimals.filter((a) => a.rarity === "rare");
+    const eAnimals = insertedAnimals.filter((a) => a.rarity === "epic");
+
+    const rewardRecords = [];
+    for (const ca of cAnimals) {
+      rewardRecords.push({ eggId: commonEgg.id, animalId: ca.id, dropRate: 33 });
+    }
+    for (const ra of rAnimals) {
+      rewardRecords.push({ eggId: rareEgg.id, animalId: ra.id, dropRate: 33 });
+    }
+    for (const ea of eAnimals) {
+      rewardRecords.push({ eggId: epicEgg.id, animalId: ea.id, dropRate: 33 });
+    }
+
+    if (rewardRecords.length > 0) {
+      await dbClient.insert(eggRewards).values(rewardRecords);
+    }
+
+    res.status(201).json({
+      message: "Master data seeded successfully!",
+      eggs: 3,
+      animals: insertedAnimals.length,
+      rewards: rewardRecords.length,
+    });
+  } catch (error) {
+    console.error("Error seeding master data:", error);
+    res.status(500).json({ error: "Failed to seed master data" });
+  }
+});
+
 
 // ==========================================
 // Start Server
