@@ -47,7 +47,7 @@ export default function AppLayout() {
           <div className={`nav-item ${isActive('/home') ? 'active' : ''}`} onClick={() => navigate('/home')}>
             <FontAwesomeIcon icon={faHouse} /> Home
           </div>
-          <div className={`nav-item ${isActive('/focus') ? 'active' : ''}`} onClick={() => navigate('/focus')}>
+          <div className={`nav-item ${isActive('/focus') ? 'active' : ''}`} onClick={() => navigate('/selectFocus')}>
             <FontAwesomeIcon icon={faClock} /> Focus
           </div>
           <div className={`nav-item ${isActive('/collection') ? 'active' : ''}`} onClick={() => navigate('/collection')}>

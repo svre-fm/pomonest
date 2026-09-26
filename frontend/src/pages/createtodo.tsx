@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useCategories } from '../hooks/useCategories';
 import { useTaskForm } from '../hooks/useTaskForm';
 import TaskFormFields from '../component/task-from/TaskFormFields';
+import '../select.css';
 
 export default function CreateTodo() {
   const navigate = useNavigate();

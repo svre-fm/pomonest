@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons';
+import { faPenToSquare, faTrashCan} from '@fortawesome/free-regular-svg-icons';
+import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { isTaskCompleted } from '../hooks/useTasks';
 import type { Task } from '../hooks/useTasks';
 import type { Category } from '../hooks/useCategories';
@@ -14,6 +15,15 @@ interface TaskListSectionProps {
   onDeleteTask: (id: string) => void;
   onTaskClick?: (task: Task) => void;
 }
+
+export const formatDueDate = (dueDate: string | null) => {
+  if (!dueDate) return '';
+  return new Date(dueDate).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  });
+};
 
 export default function TaskListSection({
   categories, tasks, expandedCategories, onToggleCategory,
@@ -31,9 +41,15 @@ export default function TaskListSection({
           className={`task-checkbox ${isTaskCompleted(task) ? 'completed' : ''}`}
           onClick={(e) => { e.stopPropagation(); onToggleTask(task.id); }}
         >
-          {isTaskCompleted(task) && '✓'}
+          {isTaskCompleted(task) && <FontAwesomeIcon icon={faCheck} style={{fontSize : '16px'}} />}
         </div>
-        <span className={`task-text ${isTaskCompleted(task) ? 'completed' : ''}`}>{task.title}</span>
+        <div style={{display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span className={`task-text ${isTaskCompleted(task) ? 'completed' : ''}`}>{task.title}</span>
+            <span className='task-text' style={{fontWeight: '200', color: '#c7b9adff', fontSize: '12px'}}>
+                {formatDueDate(task.dueDate)}
+            </span>
+        </div>
+        
       </div>
       <div className="task-actions">
         {onEditTask && (

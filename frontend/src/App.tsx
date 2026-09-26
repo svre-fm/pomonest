@@ -11,7 +11,7 @@ import Register from './pages/register';
 import Verify from './pages/verify';
 import Reset from './pages/reset';
 import Home from './pages/home';
-// import Focus from './pages/Focus';
+import SelectFocus from './pages/selectFocus'
 import CreateTodo from './pages/createtodo';
 import AppLayout from './component/AppLayout';
 
@@ -92,6 +92,7 @@ function App() {
           {/* <Route path="/focus" element={<Focus />} /> */}
           <Route path="/create-todo" element={<CreateTodo />} />
           <Route path="/create-todo/:taskId" element={<CreateTodo />} />
+          <Route path="/selectFocus" element={<SelectFocus />} />
           {/* <Route path="/collection" element={<Collection />} /> ถ้ามีหน้านี้แล้ว */}
         </Route>
 
