@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrashCan, faHouse, faClock } from '@fortawesome/free-regular-svg-icons';
-import { faEgg } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faTrashCan, faHouse, faClock,   } from '@fortawesome/free-regular-svg-icons';
+import { faEgg, faDoorOpen, faGear } from '@fortawesome/free-solid-svg-icons';
 import Focus from './Focus';
 import '../home.css';
 import '../select.css';
@@ -23,6 +23,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('home');
 
   const [user, setUser] = useState<{
+    email: string;
     username: string;
     avatar?: string;
   } | null>(null);
@@ -61,6 +62,37 @@ export default function Home() {
     fetchUser();
   }, []);
 
+  //size room
+  const roomRef = useRef<HTMLDivElement>(null);
+  const worldRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateRoomScale = () => {
+      if (!roomRef.current || !worldRef.current) return;
+
+      const roomWidth = roomRef.current.clientWidth;
+      const roomHeight = roomRef.current.clientHeight;
+
+      const scale = Math.min(
+        roomWidth / 1440,
+        roomHeight / 810
+      );
+
+      worldRef.current.style.transform = `
+        translate(-50%, -50%)
+        scale(${scale})
+      `;
+    };
+
+    updateRoomScale();
+
+    window.addEventListener("resize", updateRoomScale);
+
+    return () => {
+      window.removeEventListener("resize", updateRoomScale);
+    };
+  }, []);
+
   // logout
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -71,6 +103,9 @@ export default function Home() {
 
   // time
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // deopdown logout
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -203,19 +238,69 @@ export default function Home() {
 
         {/* Profile ขวา */}
         <div className="profile-section">
-          <img
-            src={user?.avatar || '/images/profile1.png'}
-            alt={user?.username || 'Profile'}
-            className="profile-image"
-          />
+          <div
+            className="profile-trigger"
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+          >
+            <img
+              src={user?.avatar || '/images/profile1.png'}
+              alt={user?.username || 'Profile'}
+              className="profile-image"
+            />
+          </div>
 
-          <span className="profile-name">
-            {user?.username || 'Loading...'}
-          </span>
+          {isProfileOpen && (
+            <div className="profile-dropdown">
 
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
+              <div className='profile-name'>
+                <img
+                  src={user?.avatar || '/images/profile1.png'}
+                  alt={user?.username || 'Profile'}
+                  className="profile-image"
+                />
+
+                <div className='groupname'>
+                  <span className="name">
+                    {user?.username || 'user1'}
+                  </span>
+                  <span className="email">
+                    {user?.email || 'email not found'}
+                  </span>
+                </div>
+
+                
+
+              </div>
+
+              
+
+              <button
+                className="button-logout"
+                onClick={handleLogout}
+              >
+                <FontAwesomeIcon 
+                  icon={faGear}
+                  style={{color: "#806a5aff",}} />
+                <span>account</span>
+              </button>
+
+              <button
+                className="button-logout"
+                onClick={handleLogout}
+              >
+                <FontAwesomeIcon 
+                  icon={faDoorOpen}
+                  style={{color: "#806a5aff",}} />
+                <span>sign out</span>
+              </button>
+
+              
+
+            </div>
+          )}
+
+          
+          
         </div>
 
         </div>
@@ -225,7 +310,87 @@ export default function Home() {
         
         {/* === HOME (Dashboard) === */}
         {activeTab === 'home' && (
-          <div className="room">
+          <div className="body-container">
+            <div className='room' ref={roomRef}>
+              <div className='room-world' ref={worldRef}>
+
+                <img 
+                  src="/images/room.svg"
+                  className="room-background"
+                />
+
+                <div className="dog">
+                  <div className="shadow-dog"></div>
+                  <img
+                    src="/images/animal/A_dog.png"
+                    alt="dog"
+                  />
+                </div>
+
+                <div className="cat">
+                  <div className="shadow-cat"></div>
+                  <img
+                    src="/images/animal/A_cat.PNG"
+                    alt="cat"
+                  />
+                </div>
+
+                <div className="fish">
+                  <img
+                    src="/images/animal/A_fish.PNG"
+                    alt="fish"
+                  />
+                </div>
+
+                <div className="kid">
+                  <div className="kid-shadow"></div>
+                  <img
+                    src="/images/animal/A_kid.PNG"
+                    alt="kid"
+                  />
+                </div>
+
+                <div className="panda">
+                  <div className="panda-shadow"></div>
+                  <img
+                    src="/images/animal/A_pan.PNG"
+                    alt="panda"
+                  />
+                </div>
+
+                <div className="penguin">
+                  <div className="penguin-shadow"></div>
+                  <img
+                    src="/images/animal/A_peng.PNG"
+                    alt="penguin"
+                  />
+                </div>
+
+                <div className="rabbit">
+                  <img
+                    src="/images/animal/A_rab.PNG"
+                    alt="rabbit"
+                  />
+                </div>
+
+                <div className="tiger">
+                  <div className="tiger-shadow"></div>
+                  <img
+                    src="/images/animal/A_tiger.PNG"
+                    alt="tiger"
+                  />
+                </div>
+
+                <div className="pig">
+                  <div className="pig-shadow"></div>
+                  <img
+                    src="/images/animal/A_pig.PNG"
+                    alt="pig"
+                  />
+                </div>
+
+              </div>
+            </div>
 
             {/* เวลา */}
             <div className="room-time">

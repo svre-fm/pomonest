@@ -6,8 +6,7 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-import Focus from './pages/Focus';
-import Test from './pages/test';
+// import Focus from './pages/Focus';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
@@ -127,11 +126,6 @@ function App() {
               replace
             />
           }
-        />
-
-        <Route
-          path="/test"
-          element={<Test />}
         />
 
       </Routes>
