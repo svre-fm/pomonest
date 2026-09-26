@@ -2,7 +2,7 @@ import {
   pgTable,
   uuid,
   varchar,
-  text,
+  serial,
   timestamp,
   integer,
   boolean,
@@ -105,7 +105,7 @@ export const activities = pgTable("activities", {
 
 //egg table
 export const eggs = pgTable("eggs", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: serial("id").primaryKey(),
 
   name: varchar("name", { length: 100 }).notNull(),
 
@@ -122,7 +122,7 @@ export const userEggs = pgTable("user_eggs", {
     .references(() => users.id)
     .notNull(),
 
-  eggId: uuid("egg_id")
+  eggId: integer("egg_id")
     .references(() => eggs.id)
     .notNull(),
 
@@ -165,24 +165,26 @@ export const focusSessions = pgTable("focus_sessions", {
 
 //animal
 export const animals = pgTable("animals", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: serial("id").primaryKey(),
 
   name: varchar("name", { length: 100 }).notNull(),
 
   rarity: rarityEnum("rarity").default("common"),
 
   image: varchar("image", { length: 255 }).notNull(),
+
+  animation: varchar("animation", { length: 255 }).notNull()
 });
 
 //egg rewards table
 export const eggRewards = pgTable("egg_rewards", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: serial("id").primaryKey(),
 
-  eggId: uuid("egg_id")
+  eggId:  integer("egg_id")
     .references(() => eggs.id)
     .notNull(),
 
-  animalId: uuid("animal_id")
+  animalId: integer("animal_id")
     .references(() => animals.id)
     .notNull(),
 
@@ -198,7 +200,7 @@ export const userAnimals = pgTable("user_animals", {
     .references(() => users.id)
     .notNull(),
 
-  animalId: uuid("animal_id")
+  animalId: integer("animal_id")
     .references(() => animals.id)
     .notNull(),
 

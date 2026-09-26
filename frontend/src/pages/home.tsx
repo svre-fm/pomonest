@@ -1,353 +1,156 @@
-import { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrashCan, faHouse, faClock } from '@fortawesome/free-regular-svg-icons';
-import { faEgg } from '@fortawesome/free-solid-svg-icons';
-import Focus from './Focus';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCategories } from '../hooks/useCategories';
+import { useTasks } from '../hooks/useTasks';
+import TaskListSection from '../component/TaskListSection';
 import '../home.css';
 import '../select.css';
 
-interface Task {
-  id: string;
-  text: string;
-  completed: boolean;
-  categoryId?: string;
+interface OwnedAnimal {
+  name: string;
+  image: string;
+  animation: string;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
+const ANIMAL_LAYOUT: Record<string, { className: string; shadow: string | null }> = {
+  Dog:     { className: 'dog',     shadow: 'shadow-dog' },
+  Cat:     { className: 'cat',     shadow: 'shadow-cat' },
+  Fish:    { className: 'fish',    shadow: null },
+  Kid:     { className: 'kid',     shadow: 'kid-shadow' },
+  Panda:   { className: 'panda',   shadow: 'panda-shadow' },
+  Penguin: { className: 'penguin', shadow: 'penguin-shadow' },
+  Rabbit:  { className: 'rabbit',  shadow: null },
+  Tiger:   { className: 'tiger',   shadow: 'tiger-shadow' },
+  Pig:     { className: 'pig',     shadow: 'pig-shadow' },
+};
+
+const ASSET_BASE_URL = '/images/animal';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('home');
+  const navigate = useNavigate();
 
-  const [user, setUser] = useState<{
-    username: string;
-    avatar?: string;
-  } | null>(null);
+  const [user, setUser] = useState<{ email: string; username: string; avatar?: string } | null>(null);
+  const [ownedAnimals, setOwnedAnimals] = useState<OwnedAnimal[]>([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
-  // data user
+  const { categories } = useCategories();
+  const { tasks, toggleTask, deleteTask } = useTasks();
 
-    useEffect(() => {
+  const roomRef = useRef<HTMLDivElement>(null);
+  const worldRef = useRef<HTMLDivElement>(null);
+
+  const updateRoomScale = useCallback(() => {
+    if (!roomRef.current || !worldRef.current) return;
+    const scale = Math.min(roomRef.current.clientWidth / 1440, roomRef.current.clientHeight / 810);
+    worldRef.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateRoomScale);
+    return () => window.removeEventListener('resize', updateRoomScale);
+  }, [updateRoomScale]);
+
+  useEffect(() => { updateRoomScale(); }, [updateRoomScale]);
+
+  useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('authToken');
-
-      if (!token) {
-        console.log('No auth token');
-        return;
-      }
-
+      if (!token) return;
       try {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
         const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || 'Failed to fetch user');
-        }
-
-        console.log('Current user:', result.data);
+        if (!response.ok) throw new Error(result.message);
         setUser(result.data);
       } catch (error) {
         console.error('Fetch user error:', error);
       }
     };
-
     fetchUser();
   }, []);
 
-  // logout
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-
-    window.location.href = '/login';
-  };
-
-  // time
-  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const fetchOwnedAnimals = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      try {
+        const response = await fetch('/api/user-animals', { headers: { Authorization: `Bearer ${token}` } });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        setOwnedAnimals(result.data);
+      } catch (error) {
+        console.error('Fetch owned animals error:', error);
+      }
+    };
+    fetchOwnedAnimals();
+  }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    setExpandedCategories(categories.map((c) => c.id));
+  }, [categories]);
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const [categories, setCategories] = useState<Category[]>([
-      { id: '1', name: 'General', color: '#8884d8' },
-      { id: '2', name: 'Database', color: '#ffc658' },
-      { id: '3', name: 'AI', color: '#82ca9d' }
-    ]);
-  
-    const [tasks, setTasks] = useState<Task[]>([
-      { id: '1', text: 'Study for Exam', completed: false, categoryId: '1' },
-      { id: '2', text: 'Workout 30 mins', completed: true, categoryId: '1' },
-      { id: '3', text: 'Design ER Diagram', completed: false, categoryId: '2' },
-    ]);
-  
-    const [newTaskText, setNewTaskText] = useState('');
-    const [newTaskCategoryId, setNewTaskCategoryId] = useState(categories[0]?.id || '');
-    const [editingId, setEditingId] = useState<string | null>(null);
-  
-    const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState('');
-    const [newCategoryColor, setNewCategoryColor] = useState('#7fa65a');
-  
-    const [expandedCategories, setExpandedCategories] = useState<string[]>(categories.map(c => c.id));
-    const [focusTask, setFocusTask] = useState<Task | null>(null);
-  
-    const toggleCategoryDropdown = (categoryId: string) => {
-      setExpandedCategories(prev => 
-        prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
-      );
-    };
-  
-    const handleAddNewCategory = () => {
-      if (!newCategoryName.trim()) return;
-      const newCat = {
-        id: Date.now().toString(),
-        name: newCategoryName,
-        color: newCategoryColor
-      };
-      setCategories([...categories, newCat]);
-      setNewTaskCategoryId(newCat.id);
-      setNewCategoryName('');
-      setNewCategoryColor('#7fa65a');
-      setIsAddingNewCategory(false);
-    };
-  
-    const saveTask = () => {
-      if (!newTaskText.trim()) return;
-      if (editingId) {
-        setTasks(tasks.map(task => 
-          task.id === editingId ? { ...task, text: newTaskText, categoryId: newTaskCategoryId } : task
-        ));
-      } else {
-        const newTask: Task = {
-          id: Date.now().toString(),
-          text: newTaskText,
-          completed: false,
-          categoryId: newTaskCategoryId
-        };
-        setTasks([...tasks, newTask]);
-      }
-      resetForm();
-    };
-  
-    const resetForm = () => {
-      setNewTaskText('');
-      setEditingId(null);
-      setIsAddingNewCategory(false);
-      setActiveTab('home');
-    };
-  
-    const toggleTask = (id: string, e: React.MouseEvent) => {
-      e.stopPropagation(); 
-      setTasks(tasks.map(task => 
-        task.id === id ? { ...task, completed: !task.completed } : task
-      ));
-    };
-  
-    const deleteTask = (id: string, e: React.MouseEvent) => {
-      e.stopPropagation();
-      setTasks(tasks.filter(task => task.id !== id));
-    };
-  
-    const startEdit = (task: Task, e: React.MouseEvent) => {
-      e.stopPropagation();
-      setEditingId(task.id);
-      setNewTaskText(task.text);
-      setNewTaskCategoryId(task.categoryId || categories[0].id);
-      setActiveTab('create-todo');
-    };
-  
-    const handleTaskClickForFocus = (task: Task) => {
-      if (task.completed) return; 
-      setFocusTask(task);
-      setActiveTab('select-egg'); 
-    };
+  const toggleCategoryDropdown = (categoryId: string) => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
+    );
+    
+  };
 
   return (
     <div className="home-page">
-      {/* ----------------- SIDEBAR ----------------- */}
-      <div className="sidebar">
-
-        {/* Logo ซ้าย */}
-        <div className="logo-section">
-            <img
-            src="/images/logo.png"
-            alt="Pomonest Logo"
-            className="sidebar-logo"
-            />
-        </div>
-
-        {/* Menu กลาง */}
-        <div className="nav-menu">
-          <div className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-            <FontAwesomeIcon icon={faHouse} /> Home
-          </div>
-          <div className={`nav-item ${['focus', 'select-egg', 'focus-timer'].includes(activeTab) ? 'active' : ''}`} onClick={() => setActiveTab('focus')}>
-            <FontAwesomeIcon icon={faClock} /> Focus
-          </div>
-          <div className={`nav-item ${activeTab === 'collection' ? 'active' : ''}`} onClick={() => setActiveTab('collection')}>
-            <FontAwesomeIcon icon={faEgg} /> Collection
-          </div>
-        </div>
-
-        {/* Profile ขวา */}
-        <div className="profile-section">
-          <img
-            src={user?.avatar || '/images/profile1.png'}
-            alt={user?.username || 'Profile'}
-            className="profile-image"
-          />
-
-          <span className="profile-name">
-            {user?.username || 'Loading...'}
-          </span>
-
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-
-        </div>
-
-      {/* ----------------- MAIN CONTENT ----------------- */}
       <div className="main-content">
-        
-        {/* === HOME (Dashboard) === */}
-        {activeTab === 'home' && (
-          <div className="room">
+        <div className="body-container">
+          <div className="room" ref={roomRef}>
+            <div className="room-world" ref={worldRef}>
+              <img src="/images/room.svg" className="room-background" />
+              {ownedAnimals.map((animal) => {
+                const layout = ANIMAL_LAYOUT[animal.name];
+                if (!layout) return null;
+                return (
+                  <div className={layout.className} key={animal.name}>
+                    {layout.shadow && <div className={layout.shadow}></div>}
+                    <img src={`${ASSET_BASE_URL}/${animal.animation}`} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* เวลา */}
-            <div className="room-time">
-              <div className="current-time">
-                {currentTime.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                })}
-              </div>
+          <div className="room-time">
+            <div className="current-time">
+              {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+            <div className="current-date">
+              {currentTime.toLocaleDateString('en-US', { weekday: 'long' })}
+              {' | '}
+              {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+          </div>
 
-              <div className="current-date">
-                {currentTime.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                })}
-                {' | '}
-                {currentTime.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </div>
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Today's Tasks</h2>
+              <button className="btn-todo" onClick={() => navigate('/create-todo')}>
+                <span>+</span>
+              </button>
             </div>
 
-            <div className="card">
-                <div className="card-header">
-                  <h2 className="card-title">Today's Tasks</h2>
-                  <button className="btn-todo" onClick={() => { setEditingId(null); setNewTaskText(''); setActiveTab('create-todo'); }}>
-                    <span>+</span>
-                  </button>
-                </div>
-
-                <div className="task-list">
-                  {categories.map(category => {
-                    const categoryTasks = tasks.filter(t => t.categoryId === category.id);
-                    if (categoryTasks.length === 0) return null; 
-                    const isExpanded = expandedCategories.includes(category.id);
-                    return (
-                      <div key={category.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div onClick={() => toggleCategoryDropdown(category.id)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '5px 0' }}>
-                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: category.color, marginRight: '10px' }}></span>
-                          <span style={{ fontWeight: 'bold', color: '#4a3320', flex: 1, fontSize: '14px' }}>{category.name}</span>
-                          <span style={{ color: '#8c735e', fontSize: '12px', marginRight: '10px' }}>{categoryTasks.length}</span>
-                          <span style={{ color: '#8c735e', fontSize: '10px' }}>{isExpanded ? '▼' : '▶'}</span>
-                        </div>
-                        {isExpanded && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '20px' }}>
-                            {categoryTasks.map(task => (
-                              <div key={task.id} className="task-item" style={{ cursor: task.completed ? 'default' : 'pointer' }} onClick={() => handleTaskClickForFocus(task)}>
-                                <div className="task-left">
-                                  <div className={`task-checkbox ${task.completed ? 'completed' : ''}`} onClick={(e) => toggleTask(task.id, e)}>
-                                    {task.completed && '✓'}
-                                  </div>
-                                  <span className={`task-text ${task.completed ? 'completed' : ''}`}>{task.text}</span>
-                                </div>
-                                <div className="task-actions">
-                                  <button className="icon-btn" onClick={(e) => startEdit(task, e)}><FontAwesomeIcon icon={faPenToSquare} /></button>
-                                  <button className="icon-btn" onClick={(e) => deleteTask(task.id, e)}><FontAwesomeIcon icon={faTrashCan} /></button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            <TaskListSection
+              categories={categories}
+              tasks={tasks}
+              expandedCategories={expandedCategories}
+              onToggleCategory={toggleCategoryDropdown}
+              onToggleTask={toggleTask}
+              onEditTask={(task) => navigate(`/create-todo/${task.id}`)}
+              onDeleteTask={deleteTask}
+            />
           </div>
-        )}
-
-        {activeTab === 'create-todo' && (
-                  <div className="todo-modal-overlay" onClick={resetForm}>
-                    <div
-                      className="card-todo todo-modal"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="back-btn-wrapper" onClick={resetForm}>
-                        <div className="btn-back-circle">←</div>
-                        <span>Back to Dashboard</span>
-                      </div>
-                      <h2 className="card-title" style={{ fontSize: '24px', marginBottom: '25px' }}>{editingId ? 'Edit Todo' : 'Create New Todo'}</h2>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#4a3320' }}>Task Title</label>
-                        <input type="text" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2d7c8', fontSize: '16px', outline: 'none' }} placeholder="What do you want to focus on?" value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} />
-                      </div>
-        
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '30px' }}>
-                        <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#4a3320', display: 'flex', justifyContent: 'space-between' }}>
-                          Category
-                          <span style={{ color: '#7fa65a', cursor: 'pointer', fontWeight: 'normal' }} onClick={() => setIsAddingNewCategory(!isAddingNewCategory)}>
-                            {isAddingNewCategory ? 'Cancel' : '+ New Category'}
-                          </span>
-                        </label>
-        
-                        {isAddingNewCategory ? (
-                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <input type="color" className="color-picker-input" value={newCategoryColor} onChange={(e) => setNewCategoryColor(e.target.value)} />
-                            <input type="text" style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '2px solid #e2d7c8', fontSize: '16px', outline: 'none' }} placeholder="Enter new category name..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
-                            <button onClick={handleAddNewCategory} className="btn-add">Add</button>
-                          </div>
-                        ) : (
-                          <select value={newTaskCategoryId} onChange={(e) => setNewTaskCategoryId(e.target.value)} style={{ padding: '12px', borderRadius: '8px', border: '2px solid #e2d7c8', fontSize: '16px', outline: 'none', backgroundColor: 'white' }}>
-                            {categories.map(cat => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                      <button onClick={saveTask} className="btn-save">{editingId ? 'UPDATE TASK' : 'SAVE & ADD TASK'}</button>
-                    </div>
-                  </div>
-                )}
-        
-                {['focus', 'select-egg', 'focus-timer', 'collection'].includes(activeTab) && (
-                  <Focus 
-                    activeTab={activeTab === 'focus' ? 'select-egg' : activeTab} // บังคับให้เริ่มที่หน้าเลือกไข่ถ้ากดจากเมนู Focus
-                    setActiveTab={setActiveTab} 
-                    task={focusTask} 
-                  />
-                )}
-
+        </div>
       </div>
     </div>
   );

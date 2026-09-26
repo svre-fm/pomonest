@@ -10,8 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx src/db/seed.ts",
     "db:prototype": "tsx ./db/prototype.ts",
+    "db:seed": "tsx ./src/db/seed.ts",
     "build": "tsc && tsc-alias",
     "eol": "eolConverter _entrypoint/*.sh",
     "email:dev": "email dev"

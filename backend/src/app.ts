@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import type { Request, Response } from "express";
-import { and, desc, eq, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
 import {
   users,
@@ -608,6 +608,26 @@ app.post("/api/categories", requireAuth, async (req: Request, res: Response) => 
       return res.status(400).json({ error: "Category name is required" });
     }
 
+    const trimmedName = name.trim();
+    const finalColor = color ? String(color).trim() : "#7fa65a";
+
+    //check category duplicate
+    const [existingCategory] = await dbClient
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.userId, req.user!.userId),
+          sql`lower(${categories.name}) = lower(${trimmedName})`,
+          sql`lower(${categories.color}) = lower(${finalColor})`
+        )
+      )
+      .limit(1);
+    
+    if (existingCategory) {
+      return res.status(409).json({ error: "Category with this name or color already exists" });
+    }
+
     const [newCategory] = await dbClient
       .insert(categories)
       .values({
@@ -1146,6 +1166,7 @@ app.get("/api/user-animals", requireAuth, async (req: Request, res: Response) =>
         animalName: animals.name,
         animalRarity: animals.rarity,
         animalImage: animals.image,
+        animalAnimation: animals.animation,
       })
       .from(userAnimals)
       .innerJoin(animals, eq(userAnimals.animalId, animals.id))
@@ -1208,13 +1229,14 @@ app.get("/api/egg-rewards", async (req: Request, res: Response) => {
         animalName: animals.name,
         animalRarity: animals.rarity,
         animalImage: animals.image,
+        animalAnimation: animals.animation,
         dropRate: eggRewards.dropRate,
       })
       .from(eggRewards)
       .innerJoin(eggs, eq(eggRewards.eggId, eggs.id))
       .innerJoin(animals, eq(eggRewards.animalId, animals.id));
 
-    if (eggId && typeof eggId === "string") {
+    if (eggId && typeof eggId === "number") {
       const rewards = await query.where(eq(eggRewards.eggId, eggId));
       return res.status(200).json({
         message: "Egg rewards fetched successfully",
@@ -1261,100 +1283,6 @@ app.get("/api/user-eggs", requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching user eggs:", error);
     res.status(500).json({ error: "Failed to fetch user eggs" });
-  }
-});
-
-// ==========================================
-// DEV ONLY: Seed initial master data (Eggs & Animals & Rewards)
-// POST /api/dev/seed-master-data
-// ==========================================
-app.post("/api/dev/seed-master-data", async (_req: Request, res: Response) => {
-  if (process.env.NODE_ENV === "production") {
-    return res.status(403).json({ error: "Not allowed in production" });
-  }
-
-  try {
-    const existingEggs = await dbClient.select().from(eggs);
-    if (existingEggs.length > 0) {
-      return res.status(200).json({
-        message: "Master data already exists in database",
-        eggsCount: existingEggs.length,
-      });
-    }
-
-    // 1. Insert Eggs
-    const [commonEgg] = await dbClient
-      .insert(eggs)
-      .values({
-        name: "Small Egg",
-        required: 60,
-        image: "/images/eggs/common.png",
-      })
-      .returning();
-
-    const [rareEgg] = await dbClient
-      .insert(eggs)
-      .values({
-        name: "Cutie Egg",
-        required: 120,
-        image: "/images/eggs/rare.png",
-      })
-      .returning();
-
-    const [epicEgg] = await dbClient
-      .insert(eggs)
-      .values({
-        name: "Fantastic Egg",
-        required: 240,
-        image: "/images/eggs/epic.png",
-      })
-      .returning();
-
-    // 2. Insert Animals
-    const insertedAnimals = await dbClient
-      .insert(animals)
-      .values([
-        { name: "Chick", rarity: "common", image: "/images/eggs/c1.png" },
-        { name: "Bunny", rarity: "common", image: "/images/eggs/c2.png" },
-        { name: "Duckling", rarity: "common", image: "/images/eggs/c3.png" },
-        { name: "Fox", rarity: "rare", image: "/images/eggs/r1.png" },
-        { name: "Panda", rarity: "rare", image: "/images/eggs/r2.png" },
-        { name: "Koala", rarity: "rare", image: "/images/eggs/r3.png" },
-        { name: "Dragon", rarity: "epic", image: "/images/eggs/e1.png" },
-        { name: "Phoenix", rarity: "epic", image: "/images/eggs/e2.png" },
-        { name: "Unicorn", rarity: "epic", image: "/images/eggs/e3.png" },
-      ])
-      .returning();
-
-    // 3. Insert Egg Rewards
-    const cAnimals = insertedAnimals.filter((a) => a.rarity === "common");
-    const rAnimals = insertedAnimals.filter((a) => a.rarity === "rare");
-    const eAnimals = insertedAnimals.filter((a) => a.rarity === "epic");
-
-    const rewardRecords = [];
-    for (const ca of cAnimals) {
-      rewardRecords.push({ eggId: commonEgg.id, animalId: ca.id, dropRate: 33 });
-    }
-    for (const ra of rAnimals) {
-      rewardRecords.push({ eggId: rareEgg.id, animalId: ra.id, dropRate: 33 });
-    }
-    for (const ea of eAnimals) {
-      rewardRecords.push({ eggId: epicEgg.id, animalId: ea.id, dropRate: 33 });
-    }
-
-    if (rewardRecords.length > 0) {
-      await dbClient.insert(eggRewards).values(rewardRecords);
-    }
-
-    res.status(201).json({
-      message: "Master data seeded successfully!",
-      eggs: 3,
-      animals: insertedAnimals.length,
-      rewards: rewardRecords.length,
-    });
-  } catch (error) {
-    console.error("Error seeding master data:", error);
-    res.status(500).json({ error: "Failed to seed master data" });
   }
 });
 
