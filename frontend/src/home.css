@@ -438,6 +438,84 @@
   box-shadow: 0px 0px 0 #99a551;
 }
 
+/* dropdown categary */
+.task-category-trigger {
+  width: 100%;
+  box-shadow: none;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #e2d7c8;
+  font-size: 16px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+
+.task-category-trigger:hover{
+  background-color: white;
+}
+
+.task-category-trigger:active{
+  transform: translateY(0px);
+  box-shadow: none;
+}
+
+.task-category-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 150px;
+  background: white;
+  border: 1px solid #e2d7c8;
+  border-radius: 8px;
+  margin-top: 4px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px; 
+}
+
+.task-category-list::-webkit-scrollbar {
+  width: 6px;
+}
+.task-category-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.task-category-list::-webkit-scrollbar-thumb {
+  background-color: rgba(140, 115, 94, 0.2);
+  border-radius: 10px;
+}
+.task-category-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(140, 115, 94, 0.4);
+}
+
+.showcategory {
+  background-color: white;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #f1ebdf;
+  padding: 10px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.showcategory:hover {
+  background-color: #fdf5f0;
+}
+
 /* =========================================
    Recent Activity Log
    ========================================= */
@@ -556,6 +634,23 @@
   border-radius: 8px;
   cursor: pointer;
   background: none;
+}
+
+/* edit category */
+.btn-squ {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 20%;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0px 4px 0 #99a551;
+  transition: all 0.1s ease-in-out;
 }
 
 /* test css */
