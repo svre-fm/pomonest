@@ -58,6 +58,9 @@ function formatUser(user: UserRecord) {
   };
 }
 
+const isValidUUID = (id: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+
 const app = express();
 
 app.use(
@@ -68,7 +71,7 @@ app.use(
       "http://fsg12.cpecmu.com",
       "https://fsg12.cpecmu.com",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   }),
 );
@@ -728,13 +731,51 @@ app.get("/api/tasks", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/tasks/:id - ดึง task เดี่ยว (เฉพาะตัวมันเอง)
+app.get("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const taskId = String(req.params.id);
+
+    if (!isValidUUID(taskId)) {
+      return res.status(400).json({ error: "Invalid task ID format" });
+    }
+
+    const [task] = await dbClient
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.status(200).json({
+      message: "Task fetched successfully",
+      data: task,
+    });
+  } catch (error) {
+    console.error("Error fetching single task:", error);
+    res.status(500).json({ error: "Failed to fetch task" });
+  }
+});
+
 // POST /api/tasks - สร้าง task ใหม่
 app.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
   try {
-    const { title, categoryId, dueDate, status } = req.body;
+    const { title, text, categoryId, dueDate, status } = req.body;
+    const taskTitle = title !== undefined ? title : text;
 
-    if (!title || typeof title !== "string" || !title.trim()) {
+    if (!taskTitle || typeof taskTitle !== "string" || !taskTitle.trim()) {
       return res.status(400).json({ error: "Task title is required" });
+    }
+
+    let parsedCategoryId: string | null = null;
+    if (categoryId && categoryId !== "none") {
+      if (!isValidUUID(categoryId)) {
+        return res.status(400).json({ error: "Invalid category ID format" });
+      }
+      parsedCategoryId = categoryId;
     }
 
     const taskStatus = status && ["todo", "doing", "done"].includes(status) ? status : "todo";
@@ -743,8 +784,8 @@ app.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
       .insert(tasks)
       .values({
         userId: req.user!.userId,
-        categoryId: categoryId || null,
-        title: title.trim(),
+        categoryId: parsedCategoryId,
+        title: taskTitle.trim(),
         status: taskStatus,
         dueDate: dueDate ? new Date(dueDate) : null,
         completedAt: taskStatus === "done" ? new Date() : null,
@@ -765,7 +806,12 @@ app.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
 app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const taskId = String(req.params.id);
-    const { title, categoryId, dueDate, status, completedAt } = req.body;
+
+    if (!isValidUUID(taskId)) {
+      return res.status(400).json({ error: "Invalid task ID format" });
+    }
+
+    const { title, text, categoryId, dueDate, status, completedAt, completed } = req.body;
 
     const [existing] = await dbClient
       .select()
@@ -778,19 +824,50 @@ app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
     }
 
     const updates: Partial<typeof tasks.$inferInsert> = {};
-    if (title !== undefined) updates.title = String(title).trim();
-    if (categoryId !== undefined) updates.categoryId = categoryId || null;
-    if (dueDate !== undefined) updates.dueDate = dueDate ? new Date(dueDate) : null;
 
-    if (status !== undefined && ["todo", "doing", "done"].includes(status)) {
-      updates.status = status;
-      if (status === "done" && !existing.completedAt) {
+    // Support both title and text (fallback)
+    const newTitle = title !== undefined ? title : text;
+    if (newTitle !== undefined) {
+      if (typeof newTitle !== "string" || !newTitle.trim()) {
+        return res.status(400).json({ error: "Task title cannot be empty" });
+      }
+      updates.title = newTitle.trim();
+    }
+
+    if (categoryId !== undefined) {
+      if (!categoryId || categoryId === "none") {
+        updates.categoryId = null;
+      } else {
+        if (!isValidUUID(categoryId)) {
+          return res.status(400).json({ error: "Invalid category ID format" });
+        }
+        updates.categoryId = categoryId;
+      }
+    }
+
+    if (dueDate !== undefined) {
+      updates.dueDate = dueDate ? new Date(dueDate) : null;
+    }
+
+    // Support both status ('todo' | 'doing' | 'done') and completed (boolean)
+    let resolvedStatus = status;
+    if (!resolvedStatus && completed !== undefined) {
+      resolvedStatus = completed ? "done" : "todo";
+    }
+
+    if (resolvedStatus !== undefined && ["todo", "doing", "done"].includes(resolvedStatus)) {
+      updates.status = resolvedStatus;
+      if (resolvedStatus === "done" && !existing.completedAt) {
         updates.completedAt = completedAt ? new Date(completedAt) : new Date();
-      } else if (status !== "done") {
+      } else if (resolvedStatus !== "done") {
         updates.completedAt = null;
       }
     } else if (completedAt !== undefined) {
       updates.completedAt = completedAt ? new Date(completedAt) : null;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No fields provided to update" });
     }
 
     const [updated] = await dbClient
@@ -813,9 +890,19 @@ app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
 app.patch("/api/tasks/:id/status", requireAuth, async (req: Request, res: Response) => {
   try {
     const taskId = String(req.params.id);
-    const { status } = req.body;
 
-    if (!status || !["todo", "doing", "done"].includes(status)) {
+    if (!isValidUUID(taskId)) {
+      return res.status(400).json({ error: "Invalid task ID format" });
+    }
+
+    const { status, completed } = req.body;
+
+    let targetStatus = status;
+    if (!targetStatus && completed !== undefined) {
+      targetStatus = completed ? "done" : "todo";
+    }
+
+    if (!targetStatus || !["todo", "doing", "done"].includes(targetStatus)) {
       return res.status(400).json({ error: "Valid status ('todo', 'doing', 'done') is required" });
     }
 
@@ -832,8 +919,8 @@ app.patch("/api/tasks/:id/status", requireAuth, async (req: Request, res: Respon
     const [updated] = await dbClient
       .update(tasks)
       .set({
-        status,
-        completedAt: status === "done" ? new Date() : null,
+        status: targetStatus,
+        completedAt: targetStatus === "done" ? new Date() : null,
       })
       .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)))
       .returning();
@@ -852,6 +939,10 @@ app.patch("/api/tasks/:id/status", requireAuth, async (req: Request, res: Respon
 app.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const taskId = String(req.params.id);
+
+    if (!isValidUUID(taskId)) {
+      return res.status(400).json({ error: "Invalid task ID format" });
+    }
 
     const [existing] = await dbClient
       .select()
@@ -873,6 +964,168 @@ app.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) =>
   } catch (error) {
     console.error("Error deleting task:", error);
     res.status(500).json({ error: "Failed to delete task" });
+  }
+});
+
+// ==========================================
+// API: Activities
+// ==========================================
+
+// GET /api/activities - ดึง activities ทั้งหมดของ user
+app.get("/api/activities", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userActivities = await dbClient
+      .select()
+      .from(activities)
+      .where(eq(activities.userId, req.user!.userId))
+      .orderBy(desc(activities.id));
+
+    res.status(200).json({
+      message: "Activities fetched successfully",
+      data: userActivities,
+    });
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    res.status(500).json({ error: "Failed to fetch activities" });
+  }
+});
+
+// GET /api/activities/:id - ดึง activity เดี่ยว (เฉพาะตัวมันเอง)
+app.get("/api/activities/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const activityId = String(req.params.id);
+
+    if (!isValidUUID(activityId)) {
+      return res.status(400).json({ error: "Invalid activity ID format" });
+    }
+
+    const [activity] = await dbClient
+      .select()
+      .from(activities)
+      .where(and(eq(activities.id, activityId), eq(activities.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!activity) {
+      return res.status(404).json({ error: "Activity not found" });
+    }
+
+    res.status(200).json({
+      message: "Activity fetched successfully",
+      data: activity,
+    });
+  } catch (error) {
+    console.error("Error fetching single activity:", error);
+    res.status(500).json({ error: "Failed to fetch activity" });
+  }
+});
+
+// POST /api/activities - สร้าง activity ใหม่
+app.post("/api/activities", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { name, color } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Activity name is required" });
+    }
+
+    const [newActivity] = await dbClient
+      .insert(activities)
+      .values({
+        userId: req.user!.userId,
+        name: name.trim(),
+        color: color ? String(color).trim() : "#7fa65a",
+      })
+      .returning();
+
+    res.status(201).json({
+      message: "Activity created successfully",
+      data: newActivity,
+    });
+  } catch (error) {
+    console.error("Error creating activity:", error);
+    res.status(500).json({ error: "Failed to create activity" });
+  }
+});
+
+// PUT /api/activities/:id - แก้ไข activity
+app.put("/api/activities/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const activityId = String(req.params.id);
+
+    if (!isValidUUID(activityId)) {
+      return res.status(400).json({ error: "Invalid activity ID format" });
+    }
+
+    const { name, color } = req.body;
+
+    const [existing] = await dbClient
+      .select()
+      .from(activities)
+      .where(and(eq(activities.id, activityId), eq(activities.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Activity not found" });
+    }
+
+    const updates: Partial<typeof activities.$inferInsert> = {};
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ error: "Activity name cannot be empty" });
+      }
+      updates.name = name.trim();
+    }
+    if (color !== undefined) updates.color = String(color).trim();
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No fields provided to update" });
+    }
+
+    const [updated] = await dbClient
+      .update(activities)
+      .set(updates)
+      .where(and(eq(activities.id, activityId), eq(activities.userId, req.user!.userId)))
+      .returning();
+
+    res.status(200).json({
+      message: "Activity updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating activity:", error);
+    res.status(500).json({ error: "Failed to update activity" });
+  }
+});
+
+// DELETE /api/activities/:id - ลบ activity
+app.delete("/api/activities/:id", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const activityId = String(req.params.id);
+
+    if (!isValidUUID(activityId)) {
+      return res.status(400).json({ error: "Invalid activity ID format" });
+    }
+
+    const [existing] = await dbClient
+      .select()
+      .from(activities)
+      .where(and(eq(activities.id, activityId), eq(activities.userId, req.user!.userId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: "Activity not found" });
+    }
+
+    await dbClient
+      .delete(activities)
+      .where(and(eq(activities.id, activityId), eq(activities.userId, req.user!.userId)));
+
+    res.status(200).json({
+      message: "Activity deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting activity:", error);
+    res.status(500).json({ error: "Failed to delete activity" });
   }
 });
 
