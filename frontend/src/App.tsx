@@ -6,12 +6,14 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-// import Focus from './pages/Focus';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
 import Reset from './pages/reset';
 import Home from './pages/home';
+// import Focus from './pages/Focus';
+import CreateTodo from './pages/createtodo';
+import AppLayout from './component/AppLayout';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,21 +30,14 @@ function App() {
 
       try {
         const response = await fetch('/api/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (response.ok) {
           const data = await response.json();
-
           if (data.data) {
-            localStorage.setItem(
-              'authUser',
-              JSON.stringify(data.data)
-            );
+            localStorage.setItem('authUser', JSON.stringify(data.data));
           }
-
           setIsLoggedIn(true);
         } else {
           localStorage.removeItem('authToken');
@@ -75,58 +70,32 @@ function App() {
             isLoggedIn ? (
               <Navigate to="/home" replace />
             ) : (
-              <Login
-                onLoginSuccess={() =>
-                  setIsLoggedIn(true)
-                }
-              />
+              <Login onLoginSuccess={() => setIsLoggedIn(true)} />
             )
           }
         />
 
         {/* Register */}
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/register" element={<Register />} />
 
         {/* Verify */}
-        <Route
-          path="/verify"
-          element={<Verify />}
-        />
+        <Route path="/verify" element={<Verify />} />
 
-        {/* resetpassword */}
-        <Route
-          path='/reset'
-          element={<Reset />}
-        />
-      
+        {/* Reset password */}
+        <Route path="/reset" element={<Reset />} />
 
-        {/* Focus */}
+        {/* ทุก route ข้างในนี้ มี sidebar ครอบด้วย AppLayout */}
         <Route
-          path="/home"
-          element={
-            isLoggedIn ? (
-              <Home />
-            ) : (
-              <Navigate
-                to="/login"
-                replace
-              />
-            )
-          }
-        />
-        
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/login"
-              replace
-            />
-          }
-        />
+          element={isLoggedIn ? <AppLayout /> : <Navigate to="/login" replace />}
+        >
+          <Route path="/home" element={<Home />} />
+          {/* <Route path="/focus" element={<Focus />} /> */}
+          <Route path="/create-todo" element={<CreateTodo />} />
+          <Route path="/create-todo/:taskId" element={<CreateTodo />} />
+          {/* <Route path="/collection" element={<Collection />} /> ถ้ามีหน้านี้แล้ว */}
+        </Route>
+
+        <Route path="*" element={<Navigate to="/login" replace />} />
 
       </Routes>
     </BrowserRouter>
