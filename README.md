@@ -29,8 +29,10 @@ FRONTEND_PORT=6012
 EMAIL_USER=pomonest.team@gmail.com
 EMAIL_PASSWORD=lnyyndvhnjhzowch
 FRONTEND_URL=http://localhost:6012
+FRONTEND_URL=http://localhost:6012
 BACKEND_URL=http://localhost:3001
 ```
+
 
 Create a `.env` file in the `frontend` folder with the following values:
 
