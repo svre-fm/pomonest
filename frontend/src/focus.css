@@ -1,5 +1,5 @@
 /* =========================================
-   หน้า Focus Timer (จับเวลาฟักไข่)
+   หน้า Focus Timer (แบบที่ 2: ซ้าย Timer / ขวา Egg ขยายใหญ่สมดุล)
    ========================================= */
 .focus-timer-view {
   position: relative;
@@ -10,7 +10,8 @@
   justify-content: space-between;
   color: white;
   overflow: hidden;
-  padding: 30px 40px;
+  padding: 24px 40px 36px;
+  box-sizing: border-box;
 }
 
 /* ภาพพื้นหลังป่า */
@@ -24,191 +25,249 @@
   background-size: cover;
   background-position: center;
   z-index: 0;
-  filter: brightness(0.85);
+  filter: brightness(0.92);
 }
 
-.timer-top-bar, .timer-center-display, .timer-bottom-controls {
+.timer-top-bar,
+.timer-center-display,
+.timer-bottom-controls {
   position: relative;
   z-index: 1;
 }
 
-/* Top Bar */
+/* =========================================
+   1. Top Bar (ล็อก Focus Session ให้อยู่กึ่งกลางหน้าจอเป๊ะ)
+   ========================================= */
 .timer-top-bar {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.btn-outline-white {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  font-size: 14px;
-}
-.btn-outline-white:hover { background: rgba(0, 0, 0, 0.6); }
-
 .timer-title {
-  font-size: 14px;
-  font-weight: 500;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: 1px;
-}
-
-.timer-controls { display: flex; gap: 10px; }
-.icon-btn-white {
-  background: rgba(0, 0, 0, 0.4);
-  border: none;
-  color: white;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-}
-
-/* Center Display */
-.timer-center-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  justify-content: center;
-}
-
-.icon-btn-white {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: rgba(90, 100, 90, 0.8); /* ปรับสีพื้นหลังปุ่ม */
-  color: white;
-  border: none;
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0px 4px 0px #859146; 
-  transition: all 0.1s ease-in-out;
-}
-
-/* เอฟเฟกต์ตอนกดปุ่ม */
-.icon-btn-white:active {
-  transform: translateY(4px);
-  box-shadow: 0px 0px 0px #859146;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
 }
 
 .timer-controls {
   display: flex;
-  gap: 15px; 
+  gap: 12px;
+}
+
+/* สไตล์ปุ่มกลมสีเขียว ใช้ร่วมกันทั้งซ้ายบนและขวาบน */
+.btn-back-circle,
+.icon-btn-green {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 50%;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0px 4px 0 #99a551;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+
+.btn-back-circle:hover,
+.icon-btn-green:hover {
+  filter: brightness(1.04);
+}
+
+.btn-back-circle:active,
+.back-btn-wrapper:active .btn-back-circle,
+.icon-btn-green:active {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0 #99a551;
+}
+
+/* =========================================
+   2. Center Display (จัดเรียงแนวนอน: ซ้าย Timer ใหญ่ / ขวา ไข่ใหญ่)
+   ========================================= */
+.timer-center-display {
+  display: flex;
+  flex-direction: row; /* จัดวางแนวนอน ซ้าย-ขวา */
+  align-items: center;
+  justify-content: center;
+  gap: clamp(80px, 12vw, 140px); /* ระยะห่างระหว่าง Timer กับไข่ */
+  flex: 1;
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+/* วงกลม Progress รอบเวลา (ฝั่งซ้าย - ขยายใหญ่ขึ้นเป็น 340px) */
+.timer-ring-wrapper {
+  position: relative;
+  width: 540px;
+  height: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-ring-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.timer-ring-bg {
+  fill: rgba(0, 0, 0, 0.2);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 8;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: #ded65a;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease-out;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.timer-ring-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .countdown-text {
-  font-size: 100px;
-  font-weight: bold;
+  font-size: 86px; /* ขยายตัวเลขเวลาให้ใหญ่ขึ้น */
+  font-weight: 800;
   margin: 0;
-  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .focus-task-name {
   font-size: 18px;
-  margin: 5px 0 30px 0;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 8px 20px;
-  border-radius: 20px;
+  font-weight: 600;
+  margin: 14px 0 0 0;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 24px;
+  border-radius: 24px;
   backdrop-filter: blur(4px);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* อนิเมชันรังนกและไข่ */
+/* อนิเมชันรังนกและไข่ (ฝั่งขวา - ขยายใหญ่ให้สมดุลกับวงกลมเวลา) */
 .nest-container {
   position: relative;
-  width: 250px;
-  height: 180px;
+  width: 440px;
+  height: 260px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  margin: 0;
 }
 
 .nest-img {
   position: absolute;
-  bottom: -70px;
+  bottom: -165px;
   width: 100%;
   z-index: 1;
 }
 
 .egg-img {
   position: relative;
-  width: 120px;
-  margin-bottom: 30px;
+  width: 275px; /* ขยายขนาดไข่จาก 118px เป็น 175px */
+  /* margin-bottom: 62px; ยกไข่ให้อยู่กลางรังที่ขยายใหญ่ขึ้น */
   z-index: 2;
   transform-origin: bottom center;
 }
 
-/* Keyframes สำหรับไข่ */
-@keyframes rock-gentle {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(-3deg); }
-  75% { transform: rotate(3deg); }
-  100% { transform: rotate(0deg); }
-}
-
-.rocking-anim {
-  animation: rock-gentle 4s ease-in-out infinite;
-}
-
-/* Bottom Controls */
+/* =========================================
+   3. Bottom Controls (เพิ่มขนาดและระยะห่างปุ่มให้รับกับซ้าย-ขวา)
+   ========================================= */
 .timer-bottom-controls {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-}
-
-.egg-status-card {
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  padding: 12px 20px;
-  border-radius: 16px;
-  gap: 15px;
-  min-width: 300px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.egg-mini-icon { font-size: 24px; }
-.egg-status-info { flex: 1; display: flex; flex-direction: column; gap: 5px;}
-.egg-name { font-size: 14px; font-weight: bold; }
-
-.egg-progress-mini-bg {
-  width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden;
-}
-.egg-progress-mini-fill {
-  height: 100%; background: #ded65a; border-radius: 2px; transition: width 1s linear;
-}
-
-.egg-tier-tag {
-  font-size: 11px; padding: 4px 8px; background: rgba(255,255,255,0.2); border-radius: 8px;
+  margin-top: 10px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 15px;
+  gap: 80px; /* ขยายระยะห่างระหว่างปุ่ม Pause/Resume และ End Session ให้บาลานซ์กับองค์ประกอบด้านบน */
+  justify-content: center;
 }
 
+/* โครงสร้างปุ่มแคปซูลแบบ .btn-save */
 .btn-action {
-  padding: 12px 30px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  font-weight: bold;
+  min-width: 210px;
+  padding: 14px 34px;
+  border-radius: 60px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
   cursor: pointer;
-  backdrop-filter: blur(4px);
-  color: white;
+  transition: all 0.1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.btn-action.pause { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255,255,255,0.4); }
-.btn-action.pause:hover { background: rgba(255, 255, 255, 0.3); }
-.btn-action.end { background: rgba(217, 83, 79, 0.8); }
-.btn-action.end:hover { background: rgba(217, 83, 79, 1); }
+
+/* ปุ่ม Pause (สีเทา) */
+.btn-action.pause-mode {
+  background: #e5e7eb;
+  border: 2px solid #6b7280;
+  color: #374151;
+  box-shadow: 0px 6px 0 #9ca3af;
+}
+.btn-action.pause-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #9ca3af;
+}
+
+/* ปุ่ม Resume (สีเขียวเหมือน .btn-save) */
+.btn-action.resume-mode {
+  background: #ded65a;
+  border: 2px solid #908339;
+  color: #7a593f;
+  box-shadow: 0px 6px 0 #99a551;
+}
+.btn-action.resume-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #99a551;
+}
+
+/* ปุ่ม End Session (สีแดง) */
+.btn-action.end-mode {
+  background: #ef6b65;
+  border: 2px solid #a63632;
+  color: #ffffff;
+  box-shadow: 0px 6px 0 #b8413d;
+}
+.btn-action.end-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #b8413d;
+}

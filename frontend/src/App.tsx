@@ -14,6 +14,7 @@ import Home from './pages/home';
 import SelectFocus from './pages/selectFocus'
 import CreateTodo from './pages/createtodo';
 import AppLayout from './component/AppLayout';
+import Collection from './pages/collection';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -93,7 +94,7 @@ function App() {
           <Route path="/create-todo" element={<CreateTodo />} />
           <Route path="/create-todo/:taskId" element={<CreateTodo />} />
           <Route path="/selectFocus" element={<SelectFocus />} />
-          {/* <Route path="/collection" element={<Collection />} /> ถ้ามีหน้านี้แล้ว */}
+          <Route path="/collection" element={<Collection />} /> ถ้ามีหน้านี้แล้ว
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

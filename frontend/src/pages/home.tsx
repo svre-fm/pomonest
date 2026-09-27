@@ -10,7 +10,6 @@ interface OwnedAnimal {
   image: string;
   animation: string;
 }
-
 type TaskFilter = 'all' | 'done' | 'not-done';
 
 const ANIMAL_LAYOUT: Record<string, { className: string; shadow: string | null }> = {

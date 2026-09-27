@@ -44,10 +44,20 @@
   left: 50%;
   transform: translateX(-50%);
 
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* บังคับให้ฝั่งซ้าย (Home) และขวา (Collection) กว้างเท่ากัน ปุ่ม Focus จะล็อกอยู่กลางจอ 50% เป๊ะ */
   align-items: center;
   gap: 25px;
+}
+
+/* ดันปุ่ม Home ให้ชิดเข้ามาหา Focus */
+.nav-menu > :first-child {
+  justify-self: end;
+}
+
+/* ดันปุ่ม Collection ให้ชิดเข้ามาหา Focus */
+.nav-menu > :last-child {
+  justify-self: start;
 }
 
 /* แต่ละเมนู */

@@ -193,7 +193,7 @@ export default function Focus() {
               disabled={
                 focusMode === 'task'
                   ? !selectedTaskId || !selectedEggId
-                  : !selectedEggId   // quick mode ไม่บังคับพิมพ์ชื่อแล้ว เพราะ backend default ให้
+                  : !selectedEggId 
               }
               onClick={handleStartFocus}
             >
