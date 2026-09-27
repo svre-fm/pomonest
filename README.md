@@ -31,6 +31,14 @@ FRONTEND_URL=http://localhost:6012
 BACKEND_URL=http://localhost:3001
 `
 
+- Create a `.env` file in frontend folder with the following values:
+
+`VITE_HMR_HOST=localhost
+VITE_HMR_PROTOCOL=ws
+VITE_HMR_PORT=5173
+
+VITE_BACKEND_URL=http://localhost:3001`
+
 # Setup
 - `docker compose up -d --build`
 - `cd backend`
