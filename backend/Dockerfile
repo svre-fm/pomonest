@@ -11,7 +11,7 @@ RUN pnpm config set ignore-scripts false
 
 COPY . .
 
-RUN pnpm install --prod=false
+RUN pnpm config set minimumReleaseAge 0 && pnpm install --prod=false
 
 RUN pnpm --filter backend build
 

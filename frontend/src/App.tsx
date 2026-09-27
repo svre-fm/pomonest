@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -6,14 +6,60 @@ import {
   Navigate,
 } from 'react-router-dom';
 
-import Focus from './pages/Focus';
 import Login from './pages/login';
 import Register from './pages/register';
 import Verify from './pages/verify';
 import Reset from './pages/reset';
+import Home from './pages/home';
+import SelectFocus from './pages/selectFocus'
+import CreateTodo from './pages/createtodo';
+import AppLayout from './component/AppLayout';
+import Collection from './pages/collection';
+import Focus from './pages/Focus';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+
+      if (!token) {
+        setCheckingAuth(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            localStorage.setItem('authUser', JSON.stringify(data.data));
+          }
+          setIsLoggedIn(true);
+        } else {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsLoggedIn(false);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (checkingAuth) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <BrowserRouter>
@@ -24,61 +70,35 @@ function App() {
           path="/login"
           element={
             isLoggedIn ? (
-              <Navigate to="/focus" replace />
+              <Navigate to="/home" replace />
             ) : (
-              <Login
-                onLoginSuccess={() =>
-                  setIsLoggedIn(true)
-                }
-              />
+              <Login onLoginSuccess={() => setIsLoggedIn(true)} />
             )
           }
         />
 
         {/* Register */}
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/register" element={<Register />} />
 
         {/* Verify */}
-        <Route
-          path="/verify"
-          element={<Verify />}
-        />
+        <Route path="/verify" element={<Verify />} />
 
-        {/* resetpassword */}
-        <Route
-          path='/reset'
-          element={<Reset />}
-        />
-      
+        {/* Reset password */}
+        <Route path="/reset" element={<Reset />} />
 
-        {/* Focus */}
+        {/* ทุก route ข้างในนี้ มี sidebar ครอบด้วย AppLayout */}
         <Route
-          path="/focus"
-          element={
-            isLoggedIn ? (
-              <Focus />
-            ) : (
-              <Navigate
-                to="/login"
-                replace
-              />
-            )
-          }
-        />
+          element={isLoggedIn ? <AppLayout /> : <Navigate to="/login" replace />}
+        >
+          <Route path="/home" element={<Home />} />
+          <Route path="/focus-session" element={<Focus />} />
+          <Route path="/create-todo" element={<CreateTodo />} />
+          <Route path="/create-todo/:taskId" element={<CreateTodo />} />
+          <Route path="/selectFocus" element={<SelectFocus />} />
+          <Route path="/collection" element={<Collection />} />
+        </Route>
 
-        {/* Default */}
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/login"
-              replace
-            />
-          }
-        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
 
       </Routes>
     </BrowserRouter>
@@ -86,4 +106,3 @@ function App() {
 }
 
 export default App;
-

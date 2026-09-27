@@ -1,0 +1,132 @@
+/* =========================================
+   หน้า Collection
+   ========================================= */
+.collection-view {
+  padding: 30px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ส่วนหัวของหน้าและปุ่มกลับ */
+.collection-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.collection-header h2 {
+  margin: 0;
+  color: #4a3320;
+  text-align: center;
+  flex: 1;
+  margin-right: 40px;
+}
+
+/* ตารางแสดงผลสัตว์ 3x3 */
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  max-width: 650px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* การ์ดสัตว์ */
+.collection-card {
+  position: relative;
+  background-color: white;
+  border-radius: 16px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  transition: all 0.2s;
+}
+
+.collection-card.locked {
+  background-color: white;
+  border-color: #e2d7c8;
+  box-shadow: none;
+}
+
+/* สีขอบตามระดับ Tier (แสดงเฉพาะตัวที่ปลดล็อคแล้ว) */
+.collection-card.unlocked.tier-common { border-color: #7fa65a; }
+.collection-card.unlocked.tier-rare { border-color: #4a90e2; }
+.collection-card.unlocked.tier-epic { border-color: #9c27b0; }
+
+.tier-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+/* สีตัวอักษรป้าย Tier */
+.collection-card.unlocked.tier-common .tier-badge { color: #7fa65a; }
+.collection-card.unlocked.tier-rare .tier-badge { color: #4a90e2; }
+.collection-card.unlocked.tier-epic .tier-badge { color: #9c27b0; }
+.collection-card.locked .tier-badge { color: #c8bcae; } /* สัตว์ที่ยังไม่ปลดล็อค */
+
+.animal-img-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.animal-img-wrapper img {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+/* เงาของสัตว์ที่ยังไม่ปลดล็อค */
+.animal-img-wrapper img.silhouette {
+  filter: brightness(0) opacity(0.12);
+}
+
+/* ป้ายชื่อสัตว์ (ปลดล็อคแล้ว) */
+.animal-name-tag {
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 15px;
+  border-radius: 20px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* เงาบางๆ ให้ป้ายดูลอยขึ้นมา */
+}
+
+/* ป้ายชื่อสัตว์ Common */
+.collection-card.unlocked.tier-common .animal-name-tag {
+  background-color: #f1f4ea;
+  color: #4a6c35;
+}
+
+/* ป้ายชื่อสัตว์ Rare */
+.collection-card.unlocked.tier-rare .animal-name-tag {
+  background-color: #eaf2fb;
+  color: #356799;
+}
+
+/* ป้ายชื่อสัตว์ Epic */
+.collection-card.unlocked.tier-epic .animal-name-tag {
+  background-color: #f6eafb;
+  color: #79328a;
+}
+
+/* ป้ายชื่อสัตว์ (ยังไม่ปลดล็อค) */
+.collection-card.locked .animal-name-tag {
+  background-color: #e2d7c8;
+  color: #8c735e;
+}

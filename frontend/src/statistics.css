@@ -1,0 +1,212 @@
+/* =========================================
+   หน้า Statistics (สถิติการโฟกัส)
+   ========================================= */
+.statistics-view {
+  padding: 30px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  color: #4a3320;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.stats-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+/* ปุ่มสลับโหมด (Week, Month, Year) */
+.toggle-group {
+  display: flex;
+  background-color: white;
+  border-radius: 50px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.toggle-btn {
+  padding: 8px 24px;
+  border: none;
+  background: transparent;
+  border-radius: 50px;
+  font-weight: bold;
+  color: #8c735e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background-color: #dbe4ce; 
+  color: #4a6c35;
+  box-shadow: 0 3px 0 #9abf7c;
+}
+
+/* การ์ดสรุปผล */
+.summary-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.summary-card .label {
+  font-size: 14px;
+  color: #8c735e;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.summary-card .value {
+  font-size: 24px;
+  font-weight: 900;
+  color: #4a3320;
+}
+
+/* ส่วนล่าง Heatmap & Donut Chart */
+.charts-container {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.chart-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+}
+
+/* Heatmap (ตารางสถิติ) */
+
+.heatmap-grid {
+  display: grid;
+  gap: 10px;
+  flex: 1;
+}
+
+.heatmap-grid.week { grid-template-columns: repeat(7, 1fr); }
+.heatmap-grid.month { grid-template-columns: repeat(7, 1fr); } 
+.heatmap-grid.year { grid-template-columns: repeat(4, 1fr); } 
+
+.heatmap-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 5px;
+  border-radius: 10px;
+  background-color: #ebf0e6; 
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.heatmap-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* ไฮไลท์สำหรับวันที่ถูกกดเลือก */
+.heatmap-item.selected {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px #4a3320;
+  z-index: 2;
+}
+
+.heatmap-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: inherit;
+}
+
+.heatmap-value {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ระดับสี 5 ระดับ */
+.heatmap-item.level-0 { background-color: #ebf0e6; color: #8c735e; } 
+.heatmap-item.level-1 { background-color: #c2d8b1; color: #3b572a; } 
+.heatmap-item.level-2 { background-color: #9abf7c; color: white; }   
+.heatmap-item.level-3 { background-color: #7fa65a; color: white; }   
+.heatmap-item.level-4 { background-color: #5c8442; color: white; }
+
+/* Donut Chart ฝั่งขวา */
+.donut-chart-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  flex: 1;
+}
+
+.donut-chart {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.donut-hole {
+  width: 80px;
+  height: 80px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #8c735e;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.legend-percent {
+  margin-left: auto;
+  font-weight: bold;
+  color: #4a3320;
+  padding-left: 15px;
+}

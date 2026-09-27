@@ -19,7 +19,6 @@ export default defineConfig({
 
     proxy: {
       '/api': {
-        // ใช้ VITE_BACKEND_URL ถ้ามี (Docker), ไม่งั้นใช้ localhost (local dev)
         target: process.env.VITE_BACKEND_URL || 'http://localhost:3001',
         changeOrigin: true,
         secure: false,

@@ -1,0 +1,271 @@
+/* =========================================
+   หน้า Focus Timer
+   ========================================= */
+.focus-timer-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+  overflow: hidden;
+  padding: 24px 40px 36px;
+  box-sizing: border-box;
+}
+
+/* ภาพพื้นหลัง */
+.timer-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/home.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  filter: brightness(0.92);
+}
+
+.timer-top-bar,
+.timer-center-display,
+.timer-bottom-controls {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   Top Bar
+   ========================================= */
+.timer-top-bar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timer-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-back-circle,
+.icon-btn-green {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: #ded65a;
+  border: 2px solid #908339;
+  border-radius: 50%;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0px 4px 0 #99a551;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+
+.btn-back-circle:hover,
+.icon-btn-green:hover {
+  filter: brightness(1.04);
+}
+
+.btn-back-circle:active,
+.back-btn-wrapper:active .btn-back-circle,
+.icon-btn-green:active {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0 #99a551;
+}
+
+/* =========================================
+   Center Display
+   ========================================= */
+.timer-center-display {
+  display: flex;
+  flex-direction: row; /* จัดวางแนวนอน ซ้าย-ขวา */
+  align-items: center;
+  justify-content: center;
+  gap: clamp(80px, 12vw, 140px); /* ระยะห่างระหว่าง Timer กับไข่ */
+  flex: 1;
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+/* วงกลม Progress รอบเวลา */
+.timer-ring-wrapper {
+  position: relative;
+  width: 540px;
+  height: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-ring-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.timer-ring-bg {
+  fill: rgba(0, 0, 0, 0.2);
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 8;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: #ded65a;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease-out;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.timer-ring-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-text {
+  font-size: 86px; /* ขยายตัวเลขเวลาให้ใหญ่ขึ้น */
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.focus-task-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 14px 0 0 0;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 24px;
+  border-radius: 24px;
+  backdrop-filter: blur(4px);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* อนิเมชันรังนกและไข่ */
+.nest-container {
+  position: relative;
+  width: 440px;
+  height: 260px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin: 0;
+}
+
+.nest-img {
+  position: absolute;
+  bottom: -165px;
+  width: 100%;
+  z-index: 1;
+}
+
+.egg-img {
+  position: relative;
+  width: 275px; /* ขยายขนาดไข่ */
+  /* margin-bottom: 62px; */
+  z-index: 2;
+  transform-origin: bottom center;
+}
+
+/* =========================================
+   Bottom Controls
+   ========================================= */
+.timer-bottom-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 80px; /* ขยายระยะห่างระหว่างปุ่ม Pause/Resume และ End Session */
+  justify-content: center;
+}
+
+.btn-action {
+  min-width: 210px;
+  padding: 14px 34px;
+  border-radius: 60px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ปุ่ม Pause */
+.btn-action.pause-mode {
+  background: #e5e7eb;
+  border: 2px solid #6b7280;
+  color: #374151;
+  box-shadow: 0px 6px 0 #9ca3af;
+}
+.btn-action.pause-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #9ca3af;
+}
+
+/* ปุ่ม Resume */
+.btn-action.resume-mode {
+  background: #ded65a;
+  border: 2px solid #908339;
+  color: #7a593f;
+  box-shadow: 0px 6px 0 #99a551;
+}
+.btn-action.resume-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #99a551;
+}
+
+/* ปุ่ม End Session */
+.btn-action.end-mode {
+  background: #ef6b65;
+  border: 2px solid #a63632;
+  color: #ffffff;
+  box-shadow: 0px 6px 0 #b8413d;
+}
+.btn-action.end-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0px 2px 0 #b8413d;
+}
