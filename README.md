@@ -8,7 +8,9 @@ This project is an application inspired by the Pomodoro technique that combines 
 
 ---
 
-* `pnpm install`
+```bash
+pnpm install
+```
 
 # Environment Variables
 
@@ -28,7 +30,6 @@ BACKEND_PORT=3001
 FRONTEND_PORT=6012
 EMAIL_USER=pomonest.team@gmail.com
 EMAIL_PASSWORD=lnyyndvhnjhzowch
-FRONTEND_URL=http://localhost:6012
 FRONTEND_URL=http://localhost:6012
 BACKEND_URL=http://localhost:3001
 ```
