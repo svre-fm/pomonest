@@ -14,6 +14,7 @@ type FocusMode = 'task' | 'quick';
 
 const authFetch = (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('authToken');
+
   return fetch(url, {
     ...options,
     headers: {
@@ -26,33 +27,61 @@ const authFetch = (url: string, options: RequestInit = {}) => {
 
 export default function Focus() {
   const navigate = useNavigate();
-  const [rightPanelMode, setRightPanelMode] = useState<'list' | 'create'>('list');
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [selectedEggId, setSelectedEggId] = useState<number | null>(null);  // ← number ไม่ใช่ string
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [isStarting, setIsStarting] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
 
-  const { categories, createCategory, updateCategory, deleteCategory } = useCategories();
-  const { tasks, addTaskLocally, toggleTask, deleteTask } = useTasks();
+  const [rightPanelMode, setRightPanelMode] =
+    useState<'list' | 'create'>('list');
+  const [selectedTaskId, setSelectedTaskId] =
+    useState<string | null>(null);
+  const [selectedEggId, setSelectedEggId] =
+    useState<number | null>(null);
+  const [expandedCategories, setExpandedCategories] =
+    useState<string[]>([]);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] =
+    useState<string | null>(null);
+
+  const {
+    categories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategories();
+
+  const {
+    tasks,
+    addTaskLocally,
+    toggleTask,
+    deleteTask,
+  } = useTasks();
+
   const { eggs } = useEggs();
 
-  const filteredTasks = tasks.filter((task) => task.status !== 'done');
+  // Shows only task not completed.
+  const filteredTasks = tasks.filter(
+    task => task.status !== 'done'
+  );
 
-  const [focusMode, setFocusMode] = useState<FocusMode>('quick');
+  const [focusMode, setFocusMode] =
+    useState<FocusMode>('quick');
   const [activityName, setActivityName] = useState('');
 
-  // เริ่มฟักไข่ (POST /api/user-eggs) แล้วคืน userEggId (uuid) กลับมา
+  // Starts hatching the selected egg.
   const startHatchingEgg = async (eggId: number): Promise<string> => {
     const response = await authFetch('/api/user-eggs', {
       method: 'POST',
       body: JSON.stringify({ eggId }),
     });
+
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to start egg');
-    return result.data.id; // userEggId (uuid)
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to start egg');
+    }
+
+    return result.data.id;
   };
 
+  // created new task and starts the focus session if an egg is selected.
   const form = useTaskForm(undefined, async (createdTask) => {
     addTaskLocally({
       id: createdTask.id,
@@ -61,16 +90,25 @@ export default function Focus() {
       dueDate: createdTask.dueDate,
       categoryId: createdTask.categoryId,
     });
+
     setSelectedTaskId(createdTask.id);
 
     if (selectedEggId) {
       setIsStarting(true);
       setStartError(null);
+
       try {
         const userEggId = await startHatchingEgg(selectedEggId);
-        navigate(`/focus-session?taskId=${createdTask.id}&userEggId=${userEggId}`);
+
+        navigate(
+          `/focus-session?taskId=${createdTask.id}&userEggId=${userEggId}`
+        );
       } catch (error) {
-        setStartError(error instanceof Error ? error.message : 'Failed to start focus');
+        setStartError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to start focus'
+        );
       } finally {
         setIsStarting(false);
       }
@@ -79,35 +117,58 @@ export default function Focus() {
     }
   });
 
+  // Opens category dropdown.
   const toggleCategoryDropdown = (categoryId: string) => {
     setExpandedCategories(prev =>
-      prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
+  // Starts the focus session
   const handleStartFocus = async () => {
     if (!selectedEggId) return;
 
     setIsStarting(true);
     setStartError(null);
+
     try {
       const userEggId = await startHatchingEgg(selectedEggId);
 
+      // Starts a focus session for an existing task.
       if (focusMode === 'task') {
-        navigate(`/focus-session?taskId=${selectedTaskId}&userEggId=${userEggId}`);
+        navigate(
+          `/focus-session?taskId=${selectedTaskId}&userEggId=${userEggId}`
+        );
         return;
       }
 
+      // Creates a new activity for quick focus mode.
       const actRes = await authFetch('/api/activities', {
         method: 'POST',
-        body: JSON.stringify({ name: activityName.trim() }),
+        body: JSON.stringify({
+          name: activityName.trim(),
+        }),
       });
-      const actResult = await actRes.json();
-      if (!actRes.ok) throw new Error(actResult.error || 'Failed to create activity');
 
-      navigate(`/focus-session?activityId=${actResult.data.id}&userEggId=${userEggId}`);
+      const actResult = await actRes.json();
+
+      if (!actRes.ok) {
+        throw new Error(
+          actResult.error || 'Failed to create activity'
+        );
+      }
+
+      navigate(
+        `/focus-session?activityId=${actResult.data.id}&userEggId=${userEggId}`
+      );
     } catch (error) {
-      setStartError(error instanceof Error ? error.message : 'Failed to start focus');
+      setStartError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to start focus'
+      );
     } finally {
       setIsStarting(false);
     }
@@ -122,7 +183,6 @@ export default function Focus() {
         </div>
 
         <div className="focus-content">
-          {/* คอลัมน์ซ้าย: เลือกไข่ */}
           <div className="contianer-egg">
             {eggs.map((egg) => (
               <div
@@ -137,7 +197,6 @@ export default function Focus() {
             ))}
           </div>
 
-          {/* คอลัมน์ขวา: task panel */}
           <div className="focus-task-panel">
             <div className="focus-mode-tabs">
               <span>Select Focus mode</span>
