@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faTrashCan} from '@fortawesome/free-regular-svg-icons';
+import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import { isTaskCompleted } from '../hooks/useTasks';
 import type { Task } from '../hooks/useTasks';
@@ -10,10 +10,12 @@ interface TaskListSectionProps {
   tasks: Task[];
   expandedCategories: string[];
   onToggleCategory: (categoryId: string) => void;
-  onToggleTask: (id: string) => void;
+  onToggleTask?: (id: string) => void;
   onEditTask?: (task: Task) => void;
-  onDeleteTask: (id: string) => void;
+  onDeleteTask?: (id: string) => void;
   onTaskClick?: (task: Task) => void;
+  compact?: boolean;
+  selectedTaskId?: string | null;
 }
 
 export const formatDueDate = (dueDate: string | null) => {
@@ -27,42 +29,60 @@ export const formatDueDate = (dueDate: string | null) => {
 
 export default function TaskListSection({
   categories, tasks, expandedCategories, onToggleCategory,
-  onToggleTask, onEditTask, onDeleteTask, onTaskClick,
+  onToggleTask, onEditTask, onDeleteTask, onTaskClick, compact = false,  selectedTaskId = null
 }: TaskListSectionProps) {
-  const renderTaskItem = (task: Task) => (
-    <div
-      key={task.id}
-      className="task-item"
-      style={{ cursor: isTaskCompleted(task) || onTaskClick ? 'pointer' : 'default' }}
-      onClick={() => onTaskClick?.(task)}
-    >
-      <div className="task-left">
+  const renderTaskItem = (task: Task) => {
+    const isSelected = task.id === selectedTaskId;
+
+    if (compact) {
+      return (
         <div
-          className={`task-checkbox ${isTaskCompleted(task) ? 'completed' : ''}`}
-          onClick={(e) => { e.stopPropagation(); onToggleTask(task.id); }}
+          key={task.id}
+          className={`task-item task-item-compact ${isSelected ? 'selected' : ''}`}
+          style={{ cursor: onTaskClick ? 'pointer' : 'default' }}
+          onClick={() => onTaskClick?.(task)}
         >
-          {isTaskCompleted(task) && <FontAwesomeIcon icon={faCheck} style={{fontSize : '16px'}} />}
+          <span className="task-text">{task.title}</span>
         </div>
-        <div style={{display: 'flex', flexDirection: 'column', gap: '3px' }}>
+      );
+    }
+
+    return (
+      <div
+        key={task.id}
+        className="task-item"
+        style={{ cursor: isTaskCompleted(task) || onTaskClick ? 'pointer' : 'default' }}
+        onClick={() => onTaskClick?.(task)}
+      >
+        <div className="task-left">
+          <div
+            className={`task-checkbox ${isTaskCompleted(task) ? 'completed' : ''}`}
+            onClick={(e) => { e.stopPropagation(); onToggleTask?.(task.id); }}
+          >
+            {isTaskCompleted(task) && <FontAwesomeIcon icon={faCheck} style={{ fontSize: '16px' }} />}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <span className={`task-text ${isTaskCompleted(task) ? 'completed' : ''}`}>{task.title}</span>
-            <span className='task-text' style={{fontWeight: '200', color: '#c7b9adff', fontSize: '12px'}}>
-                {formatDueDate(task.dueDate)}
+            <span className='task-text' style={{ fontWeight: '200', color: '#c7b9adff', fontSize: '12px' }}>
+              {formatDueDate(task.dueDate)}
             </span>
+          </div>
         </div>
-        
+        <div className="task-actions">
+          {onEditTask && (
+            <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
+              <FontAwesomeIcon icon={faPenToSquare} />
+            </button>
+          )}
+          {onDeleteTask && (
+            <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}>
+              <FontAwesomeIcon icon={faTrashCan} />
+            </button>
+          )}
+        </div>
       </div>
-      <div className="task-actions">
-        {onEditTask && (
-          <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
-            <FontAwesomeIcon icon={faPenToSquare} />
-          </button>
-        )}
-        <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}>
-          <FontAwesomeIcon icon={faTrashCan} />
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const otherTasks = tasks.filter(t => !t.categoryId);
 

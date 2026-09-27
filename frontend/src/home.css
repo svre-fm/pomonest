@@ -378,6 +378,38 @@
   color: #8c735e;
 }
 
+.task-filter-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.task-filter-tabs button {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8c735e;
+  background: transparent;
+  border: 1px solid #e2d7c8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.task-filter-tabs button.active {
+  background: #fdd292;;
+  font-size: 15px;
+  color: #fff;
+  border-color: #fdd292;
+  transform: translateY(0px);
+}
+
+.task-filter-tabs button:hover:not(.active) {
+  background: #fff1dc;
+}
+
 /* ปุ่มจัดการ Task (Edit / Delete) */
 .task-actions {
   display: flex;
@@ -588,13 +620,13 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #ded65a;
-  border: 2px solid #908339;
+  border: 2px solid #903f39;
+  background: #de6e5a;
+  box-shadow: 0px 6px 0 #a55e51; 
   border-radius: 50%;
   color: #7a593f;
   font-size: 18px;
   font-weight: 800;
-  box-shadow: 0px 4px 0 #99a551;
   transition: all 0.1s ease-in-out;
 }
 
@@ -904,7 +936,7 @@
 
   transform:
     translate(-50%, -50%)
-    rotate(100eg);
+    rotate(100deg);
 
   filter: blur(11px);
   z-index: 0;

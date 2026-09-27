@@ -1,16 +1,17 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCategories } from '../hooks/useCategories';
 import { useTasks } from '../hooks/useTasks';
 import TaskListSection from '../component/TaskListSection';
 import '../home.css';
-import '../select.css';
 
 interface OwnedAnimal {
   name: string;
   image: string;
   animation: string;
 }
+
+type TaskFilter = 'all' | 'done' | 'not-done';
 
 const ANIMAL_LAYOUT: Record<string, { className: string; shadow: string | null }> = {
   Dog:     { className: 'dog',     shadow: 'shadow-dog' },
@@ -29,7 +30,6 @@ const ASSET_BASE_URL = '/images/animal';
 export default function Home() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState<{ email: string; username: string; avatar?: string } | null>(null);
   const [ownedAnimals, setOwnedAnimals] = useState<OwnedAnimal[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -39,6 +39,14 @@ export default function Home() {
 
   const roomRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
+
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('not-done');
+
+  const filteredTasks = tasks.filter((task) => {
+    if (taskFilter === 'done') return task.status === 'done';
+    if (taskFilter === 'not-done') return task.status !== 'done'; // ครอบคลุมทั้ง 'todo' และ 'doing'
+    return true; // 'all'
+  });
 
   const updateRoomScale = useCallback(() => {
     if (!roomRef.current || !worldRef.current) return;
@@ -52,22 +60,6 @@ export default function Home() {
   }, [updateRoomScale]);
 
   useEffect(() => { updateRoomScale(); }, [updateRoomScale]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-      try {
-        const response = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-        setUser(result.data);
-      } catch (error) {
-        console.error('Fetch user error:', error);
-      }
-    };
-    fetchUser();
-  }, []);
 
   useEffect(() => {
     const fetchOwnedAnimals = async () => {
@@ -140,9 +132,30 @@ export default function Home() {
               </button>
             </div>
 
+            <div className="task-filter-tabs">
+              <button
+                className={taskFilter === 'all' ? 'active' : ''}
+                onClick={() => setTaskFilter('all')}
+              >
+                All
+              </button>
+              <button
+                className={taskFilter === 'not-done' ? 'active' : ''}
+                onClick={() => setTaskFilter('not-done')}
+              >
+                To Do
+              </button>
+              <button
+                className={taskFilter === 'done' ? 'active' : ''}
+                onClick={() => setTaskFilter('done')}
+              >
+                Done
+              </button>
+            </div>
+
             <TaskListSection
               categories={categories}
-              tasks={tasks}
+              tasks={filteredTasks}
               expandedCategories={expandedCategories}
               onToggleCategory={toggleCategoryDropdown}
               onToggleTask={toggleTask}

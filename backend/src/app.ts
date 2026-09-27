@@ -609,19 +609,29 @@ app.post("/api/categories", requireAuth, async (req: Request, res: Response) => 
     const finalColor = color ? String(color).trim() : "#7fa65a";
 
     //check category duplicate
-    const [existingCategory] = await dbClient
+    const [duplicate_name] = await dbClient
       .select()
       .from(categories)
       .where(
         and(
           eq(categories.userId, req.user!.userId),
-          sql`lower(${categories.name}) = lower(${trimmedName})`,
+          sql`lower(${categories.name}) = lower(${trimmedName})`
+        )
+      )
+      .limit(1);
+
+    const [duplicate_color] = await dbClient
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.userId, req.user!.userId),
           sql`lower(${categories.color}) = lower(${finalColor})`
         )
       )
       .limit(1);
     
-    if (existingCategory) {
+    if (duplicate_color || duplicate_name) {
       return res.status(409).json({ error: "Category with this name or color already exists" });
     }
 

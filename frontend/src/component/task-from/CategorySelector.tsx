@@ -21,6 +21,8 @@ export default function CategorySelector({
   const [name, setName] = useState('');
   const [color, setColor] = useState('#7fa65a');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   const selected = categories.find(c => c.id === selectedId);
 
@@ -41,8 +43,10 @@ export default function CategorySelector({
       }
       resetForm();
       setIsAdding(false);
+      setErrorText(null);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to save category');
+      setIsError(true);
+      setErrorText(error instanceof Error ? error.message : 'Something went wrong');
     }
   };
 
@@ -104,6 +108,9 @@ export default function CategorySelector({
             </>
           )}
         </div>
+      )}
+      {errorText && (
+        <span style={{ color: '#c0392b', fontSize: '13px' }}>{errorText}</span>
       )}
     </div>
   );
