@@ -22,20 +22,20 @@
   font-size: 24px;
 }
 
-/* 🌟 ปุ่มสลับโหมด (Week, Month, Year) */
+/* ปุ่มสลับโหมด (Week, Month, Year) */
 .toggle-group {
   display: flex;
   background-color: white;
-  border-radius: 50px; /* 🌟 ปรับให้กรอบนอกโค้งมนเป็นรูปแคปซูล */
-  padding: 6px; /* เพิ่มขอบด้านในนิดหน่อยให้ปุ่มไม่ชิดขอบเกินไป */
+  border-radius: 50px;
+  padding: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .toggle-btn {
-  padding: 8px 24px; /* 🌟 เพิ่มระยะซ้ายขวาให้ปุ่มดูยาวขึ้น */
+  padding: 8px 24px;
   border: none;
   background: transparent;
-  border-radius: 50px; /* 🌟 ปรับให้ตัวกรอบข้อความโค้งมนตามครอบนอก */
+  border-radius: 50px;
   font-weight: bold;
   color: #8c735e;
   cursor: pointer;
@@ -45,10 +45,10 @@
 .toggle-btn.active {
   background-color: #dbe4ce; 
   color: #4a6c35;
-  box-shadow: 0 3px 0 #9abf7c; /* (ออปชันเสริม) ใส่เงาด้านล่างปุ่มที่กดให้ดูมีมิติแบบในภาพ */
+  box-shadow: 0 3px 0 #9abf7c;
 }
 
-/* 🌟 การ์ดสรุปผลด้านบน */
+/* การ์ดสรุปผล */
 .summary-cards-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -79,7 +79,7 @@
   color: #4a3320;
 }
 
-/* 🌟 ส่วนล่างแบ่ง 2 ฝั่ง (Heatmap & Donut Chart) */
+/* ส่วนล่าง Heatmap & Donut Chart */
 .charts-container {
   display: flex;
   gap: 20px;
@@ -102,7 +102,7 @@
   margin: 0 0 15px 0;
 }
 
-/* 🌟 Heatmap (ตารางสถิติ) */
+/* Heatmap (ตารางสถิติ) */
 
 .heatmap-grid {
   display: grid;
@@ -123,7 +123,7 @@
   border-radius: 10px;
   background-color: #ebf0e6; 
   transition: all 0.2s;
-  cursor: pointer; /* 🌟 ทำให้รู้ว่าปุ่มกดได้ */
+  cursor: pointer;
 }
 
 .heatmap-item:hover {
@@ -131,10 +131,10 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* 🌟 ไฮไลท์สำหรับวันที่ถูกกดเลือก */
+/* ไฮไลท์สำหรับวันที่ถูกกดเลือก */
 .heatmap-item.selected {
   transform: scale(1.05);
-  box-shadow: 0 0 0 3px #4a3320; /* กรอบสีน้ำตาลเข้ม */
+  box-shadow: 0 0 0 3px #4a3320;
   z-index: 2;
 }
 
@@ -157,7 +157,7 @@
 .heatmap-item.level-3 { background-color: #7fa65a; color: white; }   
 .heatmap-item.level-4 { background-color: #5c8442; color: white; }
 
-/* 🌟 Donut Chart ฝั่งขวา */
+/* Donut Chart ฝั่งขวา */
 .donut-chart-wrapper {
   display: flex;
   align-items: center;
@@ -176,7 +176,6 @@
   align-items: center;
 }
 
-/* เจาะรูตรงกลางวงกลม */
 .donut-hole {
   width: 80px;
   height: 80px;

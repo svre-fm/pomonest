@@ -1,5 +1,5 @@
 /* =========================================
-   หน้า Focus Timer (แบบที่ 2: ซ้าย Timer / ขวา Egg ขยายใหญ่สมดุล)
+   หน้า Focus Timer
    ========================================= */
 .focus-timer-view {
   position: relative;
@@ -14,7 +14,7 @@
   box-sizing: border-box;
 }
 
-/* ภาพพื้นหลังป่า */
+/* ภาพพื้นหลัง */
 .timer-background {
   position: absolute;
   top: 0;
@@ -36,7 +36,7 @@
 }
 
 /* =========================================
-   1. Top Bar (ล็อก Focus Session ให้อยู่กึ่งกลางหน้าจอเป๊ะ)
+   Top Bar
    ========================================= */
 .timer-top-bar {
   position: relative;
@@ -62,7 +62,6 @@
   gap: 12px;
 }
 
-/* สไตล์ปุ่มกลมสีเขียว ใช้ร่วมกันทั้งซ้ายบนและขวาบน */
 .btn-back-circle,
 .icon-btn-green {
   display: flex;
@@ -96,7 +95,7 @@
 }
 
 /* =========================================
-   2. Center Display (จัดเรียงแนวนอน: ซ้าย Timer ใหญ่ / ขวา ไข่ใหญ่)
+   Center Display
    ========================================= */
 .timer-center-display {
   display: flex;
@@ -110,7 +109,7 @@
   box-sizing: border-box;
 }
 
-/* วงกลม Progress รอบเวลา (ฝั่งซ้าย - ขยายใหญ่ขึ้นเป็น 340px) */
+/* วงกลม Progress รอบเวลา */
 .timer-ring-wrapper {
   position: relative;
   width: 540px;
@@ -178,7 +177,7 @@
   text-overflow: ellipsis;
 }
 
-/* อนิเมชันรังนกและไข่ (ฝั่งขวา - ขยายใหญ่ให้สมดุลกับวงกลมเวลา) */
+/* อนิเมชันรังนกและไข่ */
 .nest-container {
   position: relative;
   width: 440px;
@@ -198,14 +197,14 @@
 
 .egg-img {
   position: relative;
-  width: 275px; /* ขยายขนาดไข่จาก 118px เป็น 175px */
-  /* margin-bottom: 62px; ยกไข่ให้อยู่กลางรังที่ขยายใหญ่ขึ้น */
+  width: 275px; /* ขยายขนาดไข่ */
+  /* margin-bottom: 62px; */
   z-index: 2;
   transform-origin: bottom center;
 }
 
 /* =========================================
-   3. Bottom Controls (เพิ่มขนาดและระยะห่างปุ่มให้รับกับซ้าย-ขวา)
+   Bottom Controls
    ========================================= */
 .timer-bottom-controls {
   display: flex;
@@ -216,11 +215,10 @@
 
 .action-buttons {
   display: flex;
-  gap: 80px; /* ขยายระยะห่างระหว่างปุ่ม Pause/Resume และ End Session ให้บาลานซ์กับองค์ประกอบด้านบน */
+  gap: 80px; /* ขยายระยะห่างระหว่างปุ่ม Pause/Resume และ End Session */
   justify-content: center;
 }
 
-/* โครงสร้างปุ่มแคปซูลแบบ .btn-save */
 .btn-action {
   min-width: 210px;
   padding: 14px 34px;
@@ -236,7 +234,7 @@
   gap: 8px;
 }
 
-/* ปุ่ม Pause (สีเทา) */
+/* ปุ่ม Pause */
 .btn-action.pause-mode {
   background: #e5e7eb;
   border: 2px solid #6b7280;
@@ -248,7 +246,7 @@
   box-shadow: 0px 2px 0 #9ca3af;
 }
 
-/* ปุ่ม Resume (สีเขียวเหมือน .btn-save) */
+/* ปุ่ม Resume */
 .btn-action.resume-mode {
   background: #ded65a;
   border: 2px solid #908339;
@@ -260,7 +258,7 @@
   box-shadow: 0px 2px 0 #99a551;
 }
 
-/* ปุ่ม End Session (สีแดง) */
+/* ปุ่ม End Session */
 .btn-action.end-mode {
   background: #ef6b65;
   border: 2px solid #a63632;

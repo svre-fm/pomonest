@@ -39,24 +39,23 @@
 }
 
 /* Menu กลางหน้าจอ */
-/* Menu กลางหน้าจอ */
 .nav-menu {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 
   display: grid;
-  grid-template-columns: 1fr auto 1fr; /* บังคับให้ฝั่งซ้าย (Home) และขวา (Collection) กว้างเท่ากัน ปุ่ม Focus จะล็อกอยู่กลางจอ 50% เป๊ะ */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 25px;
 }
 
-/* ดันปุ่ม Home ให้ชิดเข้ามาหา Focus */
+/* ดันปุ่ม Home ให้ชิด Focus */
 .nav-menu > :first-child {
   justify-self: end;
 }
 
-/* ดันปุ่ม Collection ให้ชิดเข้ามาหา Focus */
+/* ดันปุ่ม Collection ให้ชิด Focus */
 .nav-menu > :last-child {
   justify-self: start;
 }
@@ -69,7 +68,7 @@
   cursor: pointer;
 }
 
-/* Profile ขวา */
+/* Profile */
 .profile-section {
   margin-left: auto;
   display: flex;
@@ -167,7 +166,7 @@
   background-color: rgba(140, 115, 94, 0.2);
 }
 
-/* 1. ปุ่ม + New Todo */
+/* ปุ่ม + New Todo */
 .btn-todo {
   width: 40px;
   height: 40px;
@@ -213,7 +212,7 @@
   pointer-events: none;
 }
 
-/* คอลัมน์สำหรับ 2 กล่องแนวตั้ง */
+/* คอลัมน์กล่องแนวตั้ง */
 .right-widgets {
   display: flex;
   flex-direction: column;
@@ -294,7 +293,7 @@
   justify-content: center;
   align-items: center;
 
-  /* เห็นพื้นหลังอยู่ แต่จางลงนิดเดียว */
+  /* พื้นหลังจางลง */
   background: rgba(74, 51, 32, 0.12);
 }
 
@@ -325,13 +324,13 @@
   flex-direction: column;
   gap: 12px;
   
-  /* สร้างแถบเลื่อนเฉพาะในกล่อง Task */
+  /* scrollbar ในกล่อง Task */
   flex: 1;
   overflow-y: auto;
   padding-right: 5px; 
 }
 
-/* ตกแต่งแถบเลื่อน (Scrollbar) */
+/* ตกแต่ง Scrollbar */
 .task-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -574,7 +573,7 @@
   color: #8c735e;
 }
 
-/* 2. คอนเทนเนอร์ปุ่ม Back to Dashboard */
+/* คอนเทนเนอร์ปุ่ม Back to Dashboard */
 .back-btn-wrapper {
   display: flex;
   align-items: center;
@@ -592,7 +591,7 @@
   color: #7a593f;
 }
 
-/* 3. ปุ่มลูกศรกลับ */
+/* ปุ่มลูกศรกลับ */
 .btn-back-circle {
   display: flex;
   align-items: center;
@@ -636,7 +635,7 @@
   box-shadow: 0px 2px 0 #99a551;
 }
 
-/* ปรับแต่งช่องเลือกสี (Color Picker) */
+/* ปรับแต่งช่องเลือกสี category (Color Picker) */
 .color-picker-input {
   width: 45px;
   height: 45px;
@@ -665,8 +664,6 @@
 }
 
 /* test css */
-
-
 .body-container {
   position: relative;
 

@@ -34,7 +34,7 @@
   min-height: 0;
 }
 
-/* กล่องการ์ดไข่ (ใช้ Grid บังคับ 3 ช่องเท่ากัน) */
+/* grid */
 .egg-cards-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
