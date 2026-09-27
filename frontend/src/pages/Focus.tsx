@@ -5,8 +5,6 @@ import { faVolume, faGear } from '@fortawesome/free-solid-svg-icons';
 import '../index.css';
 import '../focus.css';
 
-const EGG_BASE_URL = '/images/eggs';
-
 interface UserEggInfo {
   id: string;
   eggId: number;
@@ -46,6 +44,21 @@ function formatClock(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
   const s = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
+}
+
+function getEggStageImage(
+  image: string,
+  stage: 'normal' | 'cracked' | 'split'
+) {
+  if (stage === 'normal') {
+    return `/images/${image}`;
+  }
+
+  const dotIndex = image.lastIndexOf('.');
+  const name = image.slice(0, dotIndex);
+  const ext = image.slice(dotIndex);
+
+  return `/images/${name}-${stage}${ext}`;
 }
 
 export default function FocusSession() {
@@ -98,6 +111,7 @@ export default function FocusSession() {
 
   const targetSeconds = (userEgg?.eggRequired ?? 25) * 60;
 
+
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(true);
   const [hatchStage, setHatchStage] = useState<'none' | 'shaking' | 'splitting' | 'hatched'>('none');
@@ -137,32 +151,39 @@ export default function FocusSession() {
   }, [elapsed, targetSeconds, running]);
 
   async function saveSessionToBackend(sessionData: {
-    startTime: string;
-    endTime: string;
-    duration: number;
-    status: 'completed' | 'cancelled';
-  }): Promise<HatchedAnimal | null> {
-    try {
-      const response = await authFetch('/api/timer/save', {
-        method: 'POST',
-        body: JSON.stringify({
-          taskId: taskId || null,
-          activityId: activityId || null,
-          userEggId,
-          ...sessionData,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        console.error('Save session failed:', result.error);
-        return null;
-      }
-      return result.data?.hatchedAnimal ?? null;
-    } catch (error) {
-      console.error('Failed to connect to backend:', error);
+  startTime: string;
+  endTime: string;
+  duration: number;
+  status: 'completed' | 'cancelled';
+}): Promise<HatchedAnimal | null> {
+  try {
+    const response = await authFetch('/api/timer/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        taskId: taskId || null,
+        activityId: activityId || null,
+        userEggId,
+        ...sessionData,
+      }),
+    });
+
+    const result = await response.json();
+
+    console.log('🔥 TIMER SAVE RESPONSE:', result);
+
+    if (!response.ok) {
+      console.error('Save session failed:', result.error);
       return null;
     }
+
+    console.log('🐣 HATCHED ANIMAL:', result.data?.hatchedAnimal);
+
+    return result.data?.hatchedAnimal ?? null;
+  } catch (error) {
+    console.error('Failed to connect to backend:', error);
+    return null;
   }
+}
 
   async function logSegment(currentElapsed: number, forcedStatus?: 'completed' | 'cancelled') {
     const startTime = segmentStartTimeRef.current;
@@ -356,54 +377,36 @@ export default function FocusSession() {
 
           {/* ================= HATCHED ================= */}
           {hatchStage === 'hatched' ? (
-
-            hatchedAnimal ? (
-              <div className="hatched-animal-display">
-
-                {hatchedAnimal.image && (
-                  <img
-                    src={`/images/animal/${hatchedAnimal.image}`}
-                    alt={hatchedAnimal.name ?? 'Animal'}
-                    className="hatched-animal-img"
-                  />
-                )}
-
-                <p className="hatched-animal-text">
-                  You got a {hatchedAnimal.name}!
-                </p>
-
-              </div>
-            ) : (
-              <p className="hatched-animal-text">
-                Hatched!
-              </p>
-            )
-
+            <img
+              src={`/images/animal/${hatchedAnimal?.image}`}
+              alt={hatchedAnimal?.name ?? 'Animal'}
+              className="egg-img animate-hatch-pop"
+            />
+            
+          ) : progressPercent >= 66 ? (
+            <img
+              src={getEggStageImage(userEgg.eggImage, 'split')}
+              alt="splitting egg"
+              className={`egg-img ${
+                running ? 'animate-egg-shake' : ''
+              }`}
+            />
+          ) : progressPercent >= 33 ? (
+            <img
+              src={getEggStageImage(userEgg.eggImage, 'cracked')}
+              alt="cracked egg"
+              className={`egg-img ${
+                running ? 'animate-egg-wobble' : ''
+              }`}
+            />
           ) : (
-
-            /* ================= EGG ================= */
-            <div className="egg-display">
-
-              <img
-                src={`${EGG_BASE_URL}/${userEgg.eggImage}`}
-                alt={userEgg.eggName}
-                className={`egg-img ${
-                  hatchStage === 'shaking'
-                    ? 'animate-egg-shake'
-                    : running
-                      ? 'animate-egg-wobble'
-                      : ''
-                }`}
-              />
-
-              {/* Saving text only while saving */}
-              {hatchStage === 'shaking' && isSaving && (
-                <p className="saving-text">
-                  Saving your progress...
-                </p>
-              )}
-
-            </div>
+            <img
+              src={getEggStageImage(userEgg.eggImage, 'normal')}
+              alt={userEgg.eggName}
+              className={`egg-img ${
+                running ? 'animate-egg-wobble' : ''
+              }`}
+            />
           )}
 
         </div>

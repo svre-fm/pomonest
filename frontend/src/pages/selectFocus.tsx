@@ -8,7 +8,7 @@ import TaskFormFields from '../component/task-from/TaskFormFields';
 import TaskListSection from '../component/TaskListSection';
 import '../select.css';
 
-const EGG_BASE_URL = '/images/eggs';
+const EGG_BASE_URL = '/images';
 
 type FocusMode = 'task' | 'quick';
 
