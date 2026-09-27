@@ -51,6 +51,13 @@ export default function Login({
       }
 
       console.log('Login Success:', data);
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('token', data.token);
+      }
+      if (data.data) {
+        localStorage.setItem('authUser', JSON.stringify(data.data));
+}
 
       onLoginSuccess();
 

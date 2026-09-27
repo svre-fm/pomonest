@@ -599,12 +599,50 @@ button {
   margin-top: 15px; 
 }
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper .auth-input {
+  width: 100%;
+  padding-right: 45px;
+  box-sizing: border-box;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+  font-size: 18px;
+
+  padding: 4px;
+  box-shadow: none;
+}
+
+.password-toggle:hover{
+  background: transparent;
+}
+
+.password-toggle:active{
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 /* Verify Email */
 .verify-email-box {
   position: relative;
   width: 450px;
-  height: 200px;
+  height: auto;
   border-radius: 50px;
+  padding-bottom: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -643,8 +681,11 @@ button {
 }
 
 .btn-gmail {
-  position: relative;
-  bottom: 13px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,50%);
+  color: #fff;
   border: 2px solid #903f39;
   background: #de6e5a;
   box-shadow: 0px 6px 0 #a55e51; 
@@ -655,14 +696,35 @@ button {
   background: #e99588;
 }
 
+.btn-gmail:active{
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,60%);
+  box-shadow: 0px 0px 0 #a55e51;
+}
+
 .btn-gmail a{
   color: #fff;
+}
+
+.btn-back {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,50%);
+}
+
+.btn-back:active{
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%,60%);
+  box-shadow: 0px 0px 0 #99a551;
 }
 
 /* Button */
 button {
   border: 2px solid #908339;
-  background: #ded65a;
+  background: rgb(222, 214, 90);
   padding: 12px 20px;
   border-radius: 60px;
   cursor: pointer;
@@ -685,4 +747,69 @@ a {
   font-weight: 600;
   font-size: 20px;
   text-decoration: none;
+}
+
+/* resetpassword */
+.email-input {
+  width: 80%;
+  padding: 12px 15px;
+  margin-bottom: -5px;
+  border-radius: 8px;
+  border: 2px solid #8e6c4a;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.cancel-link {
+  display: block;
+  color: #d43c5d;
+  font-size: 15px;
+  font-weight: 400;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 20px;
+}
+
+.reset-form {
+  align-items: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+}
+
+.password-input {
+  position: relative;
+  width: 100%;
+}
+
+.password-input .auth-input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: -5px;
+  border-radius: 8px;
+  border: 2px solid #8e6c4a;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.reset-text {
+  color: #4a3018;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.5;
 }
