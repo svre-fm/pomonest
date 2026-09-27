@@ -12,26 +12,48 @@ const EGG_BASE_URL = '/images/eggs';
 
 type FocusMode = 'task' | 'quick';
 
+const authFetch = (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('authToken');
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+  });
+};
+
 export default function Focus() {
   const navigate = useNavigate();
   const [rightPanelMode, setRightPanelMode] = useState<'list' | 'create'>('list');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  void selectedTaskId;
-  const [selectedEggId, setSelectedEggId] = useState<string | null>(null);
+  const [selectedEggId, setSelectedEggId] = useState<number | null>(null);  // ← number ไม่ใช่ string
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   const { categories, createCategory, updateCategory, deleteCategory } = useCategories();
   const { tasks, addTaskLocally, toggleTask, deleteTask } = useTasks();
   const { eggs } = useEggs();
 
-  const filteredTasks = tasks.filter((task) => {
-    return task.status !== 'done'; 
-  });
+  const filteredTasks = tasks.filter((task) => task.status !== 'done');
 
   const [focusMode, setFocusMode] = useState<FocusMode>('quick');
   const [activityName, setActivityName] = useState('');
 
-  const form = useTaskForm(undefined, (createdTask) => {
+  // เริ่มฟักไข่ (POST /api/user-eggs) แล้วคืน userEggId (uuid) กลับมา
+  const startHatchingEgg = async (eggId: number): Promise<string> => {
+    const response = await authFetch('/api/user-eggs', {
+      method: 'POST',
+      body: JSON.stringify({ eggId }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to start egg');
+    return result.data.id; // userEggId (uuid)
+  };
+
+  const form = useTaskForm(undefined, async (createdTask) => {
     addTaskLocally({
       id: createdTask.id,
       title: createdTask.title,
@@ -40,8 +62,18 @@ export default function Focus() {
       categoryId: createdTask.categoryId,
     });
     setSelectedTaskId(createdTask.id);
+
     if (selectedEggId) {
-      navigate(`/focus-session?taskId=${createdTask.id}&eggId=${selectedEggId}`);
+      setIsStarting(true);
+      setStartError(null);
+      try {
+        const userEggId = await startHatchingEgg(selectedEggId);
+        navigate(`/focus-session?taskId=${createdTask.id}&userEggId=${userEggId}`);
+      } catch (error) {
+        setStartError(error instanceof Error ? error.message : 'Failed to start focus');
+      } finally {
+        setIsStarting(false);
+      }
     } else {
       setRightPanelMode('list');
     }
@@ -53,89 +85,85 @@ export default function Focus() {
     );
   };
 
-  const authFetch = (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('authToken');
-    return fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
-    });
-  };
-
   const handleStartFocus = async () => {
-    if (focusMode === 'task') {
-      navigate(`/focus-session?taskId=${selectedTaskId}&eggId=${selectedEggId}`);
-      return;
-    }
+    if (!selectedEggId) return;
 
+    setIsStarting(true);
+    setStartError(null);
     try {
-      const response = await authFetch('/api/activities', {
+      const userEggId = await startHatchingEgg(selectedEggId);
+
+      if (focusMode === 'task') {
+        navigate(`/focus-session?taskId=${selectedTaskId}&userEggId=${userEggId}`);
+        return;
+      }
+
+      const actRes = await authFetch('/api/activities', {
         method: 'POST',
         body: JSON.stringify({ name: activityName.trim() }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to create activity');
+      const actResult = await actRes.json();
+      if (!actRes.ok) throw new Error(actResult.error || 'Failed to create activity');
 
-      navigate(`/focus-session?activityId=${result.data.id}&eggId=${selectedEggId}`);
+      navigate(`/focus-session?activityId=${actResult.data.id}&userEggId=${userEggId}`);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to start quick focus');
+      setStartError(error instanceof Error ? error.message : 'Failed to start focus');
+    } finally {
+      setIsStarting(false);
     }
   };
 
   return (
     <div className="backdrop" onClick={() => navigate('/home')}>
-        <div className="contianer-select" onClick={(e) => e.stopPropagation()}>
+      <div className="contianer-select" onClick={(e) => e.stopPropagation()}>
         <div className="back-btn-wrapper" onClick={() => navigate('/home')}>
-            <div className="btn-back-circle">←</div>
-            <span>Back to Dashboard</span>
+          <div className="back-circle">←</div>
+          <span>Back to Dashboard</span>
         </div>
 
         <div className="focus-content">
-            {/* คอลัมน์ซ้าย: เลือกไข่ */}
-            <div className="contianer-egg">
+          {/* คอลัมน์ซ้าย: เลือกไข่ */}
+          <div className="contianer-egg">
             {eggs.map((egg) => (
-                <div
+              <div
                 key={egg.id}
                 className={`egg-card ${selectedEggId === egg.id ? 'selected' : ''}`}
                 onClick={() => setSelectedEggId(egg.id)}
-                >
+              >
                 <img src={`${EGG_BASE_URL}/${egg.image}`} alt={egg.name} className="egg-image" />
                 <span className="egg-name">{egg.name}</span>
                 <span className="egg-required">{egg.required} min</span>
-                </div>
+              </div>
             ))}
+          </div>
+
+          {/* คอลัมน์ขวา: task panel */}
+          <div className="focus-task-panel">
+            <div className="focus-mode-tabs">
+              <span>Select Focus mode</span>
+              <button
+                className={focusMode === 'task' ? 'active' : ''}
+                onClick={() => setFocusMode('task')}
+              >
+                Task
+              </button>
+              <button
+                className={focusMode === 'quick' ? 'active' : ''}
+                onClick={() => setFocusMode('quick')}
+              >
+                Quick start
+              </button>
             </div>
 
-            {/* คอลัมน์ขวา: task panel */}
-            <div className="focus-task-panel">
-                <div className="focus-mode-tabs">
-                  <span> Select Foucus mode</span>
-                  <button
-                    className={focusMode === 'task' ? 'active' : ''}
-                    onClick={() => setFocusMode('task')}
-                  >
-                    Task
-                  </button>
-                  <button
-                    className={focusMode === 'quick' ? 'active' : ''}
-                    onClick={() => setFocusMode('quick')}
-                  >
-                    Quick start
-                  </button>
-                </div>
             {focusMode === 'task' ? (
               rightPanelMode === 'list' ? (
                 <>
-                  
-                    <div className="card-header">
-                      <h2 style={{fontSize : '20px', color: '#8c735e', fontWeight : '400'}}>Select a Task</h2>
-                      <button className="btn-todo" onClick={() => setRightPanelMode('create')}>
-                        <span>+</span>
-                      </button>
-                    </div>
+                  <div className="card-header">
+                    <h2 style={{ fontSize: '20px', color: '#8c735e', fontWeight: '400' }}>Select a Task</h2>
+                    <button className="btn-todo" onClick={() => setRightPanelMode('create')}>
+                      <span>+</span>
+                    </button>
+                  </div>
 
                   <div className='task-container'>
                     <TaskListSection
@@ -172,36 +200,37 @@ export default function Focus() {
                 </>
               )
             ) : (
-              <>
-                <div className="quick-start-panel">
-                  <p className="quick-start-hint">
-                    What are you focusing on? <span style={{ color: 'red' }}>(optional)</span>
-                  </p>
-                  
-                  <input
-                    type="text"
-                    className="activity-name-input"
-                    placeholder="Just hit start if you're not sure yet"
-                    value={activityName}
-                    onChange={(e) => setActivityName(e.target.value)}
-                  />
-                </div>
-              </>
+              <div className="quick-start-panel">
+                <p className="quick-start-hint">
+                  What are you focusing on? <span className="optional-tag">(optional)</span>
+                </p>
+                <input
+                  type="text"
+                  className="activity-name-input"
+                  placeholder="Just hit start if you're not sure yet"
+                  value={activityName}
+                  onChange={(e) => setActivityName(e.target.value)}
+                />
+              </div>
             )}
+
+            {startError && (
+              <p style={{ color: '#c0392b', fontSize: '13px', marginBottom: '10px' }}>{startError}</p>
+            )}
+
             <button
               className="btn-start-focus"
               disabled={
-                focusMode === 'task'
-                  ? !selectedTaskId || !selectedEggId
-                  : !selectedEggId 
+                isStarting ||
+                (focusMode === 'task' ? !selectedTaskId || !selectedEggId : !selectedEggId)
               }
               onClick={handleStartFocus}
             >
-              Start Focus
+              {isStarting ? 'Starting...' : 'Start Focus'}
             </button>
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
     </div>
-    );
+  );
 }

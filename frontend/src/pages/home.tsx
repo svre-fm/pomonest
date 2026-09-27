@@ -6,10 +6,17 @@ import TaskListSection from '../component/TaskListSection';
 import '../home.css';
 
 interface OwnedAnimal {
-  name: string;
-  image: string;
-  animation: string;
+  id: string;
+  userId: string;
+  animalId: number;
+  nickname: string | null;
+  obtainedAt: string;
+  animalName: string;
+  animalRarity: string;
+  animalImage: string;
+  animalAnimation: string;
 }
+
 type TaskFilter = 'all' | 'done' | 'not-done';
 
 const ANIMAL_LAYOUT: Record<string, { className: string; shadow: string | null }> = {
@@ -100,12 +107,20 @@ export default function Home() {
             <div className="room-world" ref={worldRef}>
               <img src="/images/room.svg" className="room-background" />
               {ownedAnimals.map((animal) => {
-                const layout = ANIMAL_LAYOUT[animal.name];
+                const layout = ANIMAL_LAYOUT[animal.animalName];
+
                 if (!layout) return null;
+
                 return (
-                  <div className={layout.className} key={animal.name}>
-                    {layout.shadow && <div className={layout.shadow}></div>}
-                    <img src={`${ASSET_BASE_URL}/${animal.animation}`} />
+                  <div className={layout.className} key={animal.id}>
+                    {layout.shadow && (
+                      <div className={layout.shadow}></div>
+                    )}
+
+                    <img
+                      src={`${ASSET_BASE_URL}/${animal.animalAnimation}`}
+                      alt={animal.animalName}
+                    />
                   </div>
                 );
               })}

@@ -22,7 +22,7 @@ export default function CreateTodo() {
     <div className="todo-modal-overlay" onClick={() => navigate('/home')}>
       <div className="card-todo todo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="back-btn-wrapper" onClick={() => navigate('/home')}>
-          <div className="btn-back-circle">←</div>
+          <div className="back-circle">←</div>
           <span>Back to Dashboard</span>
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../collection.css';
 
@@ -27,7 +27,7 @@ const DEFAULT_ANIMALS: AnimalData[] = [
   { id: '9', name: 'Snowy', rarity: 'Epic', image: '/images/animal/rab.PNG' },
 ];
 
-const API_BASE = 'http://localhost:3001';
+const BASE_URL = '/images/animal';
 
 function getAuthToken(): string | null {
   return (
@@ -44,6 +44,18 @@ export default function Collection({ collection = [] }: CollectionProps) {
   const [allAnimals, setAllAnimals] = useState<AnimalData[]>(DEFAULT_ANIMALS);
   const [unlockedAnimalIds, setUnlockedAnimalIds] = useState<Set<string>>(new Set());
   const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
+
+  const authFetch = (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('authToken');
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  };
 
   useEffect(() => {
     async function loadCollection() {
@@ -72,7 +84,7 @@ export default function Collection({ collection = [] }: CollectionProps) {
       try {
         const token = getAuthToken();
 
-        const animalsRes = await fetch(`${API_BASE}/api/animals`);
+        const animalsRes = await fetch(`/api/animals`);
 
         if (animalsRes.ok) {
           const animalsJson = await animalsRes.json();
@@ -86,7 +98,7 @@ export default function Collection({ collection = [] }: CollectionProps) {
         }
 
         if (token) {
-          const userRes = await fetch(`${API_BASE}/api/user-animals`, {
+          const userRes = await authFetch('/api/user-animals', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -204,7 +216,7 @@ export default function Collection({ collection = [] }: CollectionProps) {
                 }}
               >
                 <img
-                  src={animal.image}
+                  src={`${BASE_URL}/${animal.image}`}
                   alt={isUnlocked ? animal.name : 'Locked'}
                   style={{
                     maxHeight: '75px',

@@ -132,7 +132,7 @@ export const userEggs = pgTable("user_eggs", {
 
   startTime: timestamp("start_time", { withTimezone: true }).notNull(),
 
-  hatchedAt: timestamp("hatched_at", { withTimezone: true }).notNull(),
+  hatchedAt: timestamp("hatched_at", { withTimezone: true })
 });
 
 //focus sessions table

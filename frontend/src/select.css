@@ -221,3 +221,24 @@
   border-color: #819163;
   background: #d8f3a79a;
 }
+
+.back-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #903f39;
+  background: #de6e5a;
+  box-shadow: 0px 6px 0 #a55e51; 
+  border-radius: 50%;
+  color: #7a593f;
+  font-size: 18px;
+  font-weight: 800;
+  transition: all 0.1s ease-in-out;
+}
+
+.back-btn-wrapper:active .btn-back-circle {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0 #a55e51;
+}

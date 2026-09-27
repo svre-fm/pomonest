@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import '../statistics.css';
 
 type ViewMode = 'week' | 'month' | 'year'; 

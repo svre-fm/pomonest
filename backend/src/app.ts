@@ -505,52 +505,116 @@ app.get("/api/data/tables", (_req: Request, res: Response) => {
 // ==========================================
 // API: Save focus session (called on Stop)
 // ==========================================
+const VALID_SESSION_STATUS = ["completed", "cancelled"] as const;
+
 app.post("/api/timer/save", requireAuth, async (req: Request, res: Response) => {
   try {
-    const {
-      taskId,
-      activityId,
-      userEggId,
-      startTime,
-      endTime,
-      duration,
-      status,
-    } = req.body;
-
+    const { taskId, activityId, userEggId, startTime, endTime, duration, status } = req.body;
     const userId = req.user!.userId;
 
-    const newSession = await dbClient
+    if (!userEggId || typeof userEggId !== "string" || !isValidUUID(userEggId)) {
+      return res.status(400).json({ error: "Invalid userEggId" });
+    }
+
+    // ← แก้ตรงนี้: ระบุ field เองชัดเจน ไม่พึ่ง shape ของ join ที่เดาไม่ได้
+    const [userEggRow] = await dbClient
+      .select({
+        id: userEggs.id,
+        eggId: userEggs.eggId,
+        progress: userEggs.progress,
+        status: userEggs.status,
+        required: eggs.required,
+      })
+      .from(userEggs)
+      .innerJoin(eggs, eq(userEggs.eggId, eggs.id))
+      .where(and(eq(userEggs.id, userEggId), eq(userEggs.userId, userId)))
+      .limit(1);
+
+    if (!userEggRow) {
+      return res.status(404).json({ error: "User egg not found" });
+    }
+
+    const resolvedStatus = ["completed", "cancelled"].includes(status) ? status : "completed";
+
+    const parsedStart = new Date(startTime);
+    const parsedEnd = new Date(endTime);
+    if (isNaN(parsedStart.getTime()) || isNaN(parsedEnd.getTime())) {
+      return res.status(400).json({ error: "Invalid startTime or endTime" });
+    }
+
+    const [newSession] = await dbClient
       .insert(focusSessions)
       .values({
         userId,
         taskId: taskId ?? null,
         activityId: activityId ?? null,
         userEggId,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: parsedStart,
+        endTime: parsedEnd,
         duration,
-        status: status || "completed",
+        status: resolvedStatus,
       })
       .returning();
 
+    let hatchedAnimal = null;
+
+    if (resolvedStatus === "completed") {
+      const newProgress = userEggRow.progress + duration;   // ← ใช้ userEggRow ตรงๆ ไม่ต้องเดา key
+      const requiredSeconds = userEggRow.required * 60;
+      const isFullyHatched = newProgress >= requiredSeconds;
+
+      console.log('DEBUG hatch check:', { newProgress, requiredSeconds, isFullyHatched, currentStatus: userEggRow.status });
+
+      if (isFullyHatched && userEggRow.status !== "hatched") {
+        const rewards = await dbClient
+          .select()
+          .from(eggRewards)
+          .where(eq(eggRewards.eggId, userEggRow.eggId));
+
+        console.log('DEBUG rewards found:', rewards.length);
+
+        if (rewards.length > 0) {
+          const totalWeight = rewards.reduce((sum, r) => sum + r.dropRate, 0);
+          let roll = Math.random() * totalWeight;
+          let picked = rewards[rewards.length - 1];
+
+          for (const reward of rewards) {
+            if (roll < reward.dropRate) {
+              picked = reward;
+              break;
+            }
+            roll -= reward.dropRate;
+          }
+
+          const [newUserAnimal] = await dbClient
+            .insert(userAnimals)
+            .values({ userId, animalId: picked.animalId })
+            .returning();
+
+          const [animalInfo] = await dbClient
+            .select()
+            .from(animals)
+            .where(eq(animals.id, picked.animalId))
+            .limit(1);
+
+          hatchedAnimal = { ...newUserAnimal, name: animalInfo?.name, image: animalInfo?.image };
+        }
+
+        await dbClient
+          .update(userEggs)
+          .set({ progress: newProgress, status: "hatched", hatchedAt: new Date() })
+          .where(eq(userEggs.id, userEggId));
+      } else {
+        await dbClient
+          .update(userEggs)
+          .set({ progress: newProgress })
+          .where(eq(userEggs.id, userEggId));
+      }
+    }
+
     res.status(201).json({
       message: "Focus session saved successfully!",
-      data: {
-        id: newSession[0].id,
-        userId: newSession[0].userId,
-        taskId: newSession[0].taskId,
-        activityId: newSession[0].activityId,
-        userEggId: newSession[0].userEggId,
-        startTime: newSession[0].startTime.toLocaleString("en-US", {
-          timeZone: "Asia/Bangkok",
-        }),
-        endTime: newSession[0].endTime.toLocaleString("en-US", {
-          timeZone: "Asia/Bangkok",
-        }),
-        duration: newSession[0].duration,
-        status: newSession[0].status,
-        createdAt: newSession[0].createdAt,
-      },
+      data: { session: newSession, hatchedAnimal },
     });
   } catch (error) {
     console.error("Error saving session:", error);
@@ -1291,6 +1355,48 @@ app.get("/api/egg-rewards", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching egg rewards:", error);
     res.status(500).json({ error: "Failed to fetch egg rewards" });
+  }
+});
+
+//POST 
+app.post("/api/user-eggs", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { eggId } = req.body;
+    const parsedEggId = Number(eggId);
+
+    if (!eggId || !Number.isInteger(parsedEggId) || parsedEggId <= 0) {
+      return res.status(400).json({ error: "eggId must be a valid number" });
+    }
+
+    const [eggType] = await dbClient
+      .select()
+      .from(eggs)
+      .where(eq(eggs.id, parsedEggId))
+      .limit(1);
+
+    if (!eggType) {
+      return res.status(404).json({ error: "Egg type not found" });
+    }
+
+    const [newUserEgg] = await dbClient
+      .insert(userEggs)
+      .values({
+        userId: req.user!.userId,
+        eggId: parsedEggId,
+        progress: 0,
+        status: "incubating",
+        startTime: new Date(),
+        
+      })
+      .returning();
+
+    res.status(201).json({
+      message: "Started hatching egg",
+      data: newUserEgg,
+    });
+  } catch (error) {
+    console.error("Error starting egg:", error);
+    res.status(500).json({ error: "Failed to start egg" });
   }
 });
 

@@ -109,7 +109,7 @@ export default function CategorySelector({
           )}
         </div>
       )}
-      {errorText && (
+      {isError && (
         <span style={{ color: '#c0392b', fontSize: '13px' }}>{errorText}</span>
       )}
     </div>

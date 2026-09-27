@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
 export interface Egg {
-  id: string;
+  id: number;        // ← แก้จาก string เป็น number ให้ตรงกับ schema (serial)
   name: string;
-  required: number; 
+  required: number;
   image: string;
 }
 
@@ -21,6 +21,7 @@ const authFetch = (url: string, options: RequestInit = {}) => {
 
 export function useEggs() {
   const [eggs, setEggs] = useState<Egg[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEggs = async () => {
@@ -30,11 +31,12 @@ export function useEggs() {
         if (!response.ok) throw new Error(result.error || 'Failed to fetch eggs');
         setEggs(result.data);
       } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to load eggs');
         console.error('Fetch eggs error:', error);
       }
     };
     fetchEggs();
   }, []);
 
-  return { eggs };
+  return { eggs, error };
 }
