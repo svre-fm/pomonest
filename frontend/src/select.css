@@ -98,6 +98,15 @@
   color: #8c735e;
 }
 
+.egg-hint {
+  font-size: 13px;
+  color: #8c735e;
+  background: #fff8e8;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
 /* ===== คอลัมน์ขวา: task panel ===== */
 .focus-task-panel {
   flex: 1;
@@ -164,8 +173,9 @@
 }
 
 .quick-start-hint {
-  font-size: 14px;
+  font-size: 17px;
   color: #8c735e;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 

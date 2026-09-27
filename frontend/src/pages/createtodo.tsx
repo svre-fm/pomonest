@@ -40,8 +40,11 @@ export default function CreateTodo() {
           onDeleteCategory={deleteCategory}
         />
 
-        <button onClick={handleSave} className="btn-save">
+        <button onClick={handleSave} className="btn-save" disabled={form.isLoading}>
           {form.isEditMode ? 'UPDATE TASK' : 'SAVE & ADD TASK'}
+          {form.loadError && (
+            <p style={{ color: '#c0392b', fontSize: '13px' }}>{form.loadError}</p>
+          )}
         </button>
       </div>
     </div>

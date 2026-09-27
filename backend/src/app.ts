@@ -871,12 +871,31 @@ app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
         if (!isValidUUID(categoryId)) {
           return res.status(400).json({ error: "Invalid category ID format" });
         }
+
+        const [ownedCategory] = await dbClient
+          .select()
+          .from(categories)
+          .where(and(eq(categories.id, categoryId), eq(categories.userId, req.user!.userId)))
+          .limit(1);
+
+        if (!ownedCategory) {
+          return res.status(404).json({ error: "Category not found" });
+        }
+
         updates.categoryId = categoryId;
       }
     }
 
     if (dueDate !== undefined) {
-      updates.dueDate = dueDate ? new Date(dueDate) : null;
+      if (dueDate) {
+        const parsed = new Date(dueDate);
+        if (isNaN(parsed.getTime())) {
+          return res.status(400).json({ error: "Invalid due date format" });
+        }
+        updates.dueDate = parsed;
+      } else {
+        updates.dueDate = null;
+      }
     }
 
     // Support both status ('todo' | 'doing' | 'done') and completed (boolean)
@@ -885,7 +904,10 @@ app.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
       resolvedStatus = completed ? "done" : "todo";
     }
 
-    if (resolvedStatus !== undefined && ["todo", "doing", "done"].includes(resolvedStatus)) {
+    if (resolvedStatus !== undefined) {
+      if (!["todo", "doing", "done"].includes(resolvedStatus)) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
       updates.status = resolvedStatus;
       if (resolvedStatus === "done" && !existing.completedAt) {
         updates.completedAt = completedAt ? new Date(completedAt) : new Date();
@@ -1054,15 +1076,22 @@ app.post("/api/activities", requireAuth, async (req: Request, res: Response) => 
   try {
     const { name, color } = req.body;
 
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return res.status(400).json({ error: "Activity name is required" });
+    let resolvedName = "Quick Focus";
+    if (name !== undefined && name !== null) {
+      if (typeof name !== "string") {
+        return res.status(400).json({ error: "Activity name must be a string" });
+      }
+      const trimmed = name.trim();
+      if (trimmed) {
+        resolvedName = trimmed;
+      }
     }
 
     const [newActivity] = await dbClient
       .insert(activities)
       .values({
         userId: req.user!.userId,
-        name: name.trim(),
+        name: resolvedName,
         color: color ? String(color).trim() : "#7fa65a",
       })
       .returning();

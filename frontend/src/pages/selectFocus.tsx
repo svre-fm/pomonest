@@ -40,13 +40,49 @@ export default function Focus() {
       categoryId: createdTask.categoryId,
     });
     setSelectedTaskId(createdTask.id);
-    setRightPanelMode('list');
+    if (selectedEggId) {
+      navigate(`/focus-session?taskId=${createdTask.id}&eggId=${selectedEggId}`);
+    } else {
+      setRightPanelMode('list');
+    }
   });
 
   const toggleCategoryDropdown = (categoryId: string) => {
     setExpandedCategories(prev =>
       prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
     );
+  };
+
+  const authFetch = (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('authToken');
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+  };
+
+  const handleStartFocus = async () => {
+    if (focusMode === 'task') {
+      navigate(`/focus-session?taskId=${selectedTaskId}&eggId=${selectedEggId}`);
+      return;
+    }
+
+    try {
+      const response = await authFetch('/api/activities', {
+        method: 'POST',
+        body: JSON.stringify({ name: activityName.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to create activity');
+
+      navigate(`/focus-session?activityId=${result.data.id}&eggId=${selectedEggId}`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to start quick focus');
+    }
   };
 
   return (
@@ -76,7 +112,7 @@ export default function Focus() {
             {/* คอลัมน์ขวา: task panel */}
             <div className="focus-task-panel">
                 <div className="focus-mode-tabs">
-                  <span> select Foucus mode</span>
+                  <span> Select Foucus mode</span>
                   <button
                     className={focusMode === 'task' ? 'active' : ''}
                     onClick={() => setFocusMode('task')}
@@ -157,16 +193,9 @@ export default function Focus() {
               disabled={
                 focusMode === 'task'
                   ? !selectedTaskId || !selectedEggId
-                  : !selectedEggId
+                  : !selectedEggId   // quick mode ไม่บังคับพิมพ์ชื่อแล้ว เพราะ backend default ให้
               }
-              onClick={() => {
-                if (focusMode === 'task') {
-                  navigate(`/focus-session?taskId=${selectedTaskId}&eggId=${selectedEggId}`);
-                } else {
-                  const label = activityName.trim() || 'Focus Session';
-                  navigate(`/focus-session?activity=${encodeURIComponent(label)}&eggId=${selectedEggId}`);
-                }
-              }}
+              onClick={handleStartFocus}
             >
               Start Focus
             </button>

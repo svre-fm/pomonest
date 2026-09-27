@@ -27,8 +27,12 @@ export function useTaskForm(taskId?: string, onSaved?: (task: TaskResponse) => v
 
   const isEditMode = Boolean(taskId);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!taskId) return;
+    setIsLoading(true);
     const fetchTask = async () => {
       try {
         const response = await authFetch(`/api/tasks/${taskId}`);
@@ -36,10 +40,12 @@ export function useTaskForm(taskId?: string, onSaved?: (task: TaskResponse) => v
         if (!response.ok) throw new Error(result.error || 'Failed to fetch task');
         const task: TaskResponse = result.data;
         setTitle(task.title);
-        setDueDate(task.dueDate ?? '');
+        setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : '');
         setCategoryId(task.categoryId || '');
       } catch (error) {
-        console.error('Fetch task error:', error);
+        setLoadError(error instanceof Error ? error.message : 'Failed to load task');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchTask();
@@ -69,5 +75,5 @@ export function useTaskForm(taskId?: string, onSaved?: (task: TaskResponse) => v
     return result.data as TaskResponse;
   };
 
-  return { title, setTitle, dueDate, setDueDate, categoryId, setCategoryId, isEditMode, save, reset };
+  return { title, setTitle, dueDate, setDueDate, categoryId, setCategoryId, isEditMode, save, reset, isLoading, loadError };
 }
