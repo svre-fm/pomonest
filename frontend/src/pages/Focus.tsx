@@ -74,6 +74,7 @@ export default function FocusSession() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hatchedAnimal, setHatchedAnimal] = useState<HatchedAnimal | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  void  isSaving;
 
   useEffect(() => {
     const loadData = async () => {
@@ -122,7 +123,7 @@ export default function FocusSession() {
   const intervalRef = useRef<number | null>(null);
   const shakeTimeoutRef = useRef<number | null>(null);
   const splitTimeoutRef = useRef<number | null>(null);
-  const hasLoggedRef = useRef(false); // กันยิง logSegment ซ้ำ
+  const hasLoggedRef = useRef(false); 
 
   useEffect(() => {
     if (running) {
@@ -168,16 +169,10 @@ export default function FocusSession() {
     });
 
     const result = await response.json();
-
-    console.log('🔥 TIMER SAVE RESPONSE:', result);
-
     if (!response.ok) {
       console.error('Save session failed:', result.error);
       return null;
     }
-
-    console.log('🐣 HATCHED ANIMAL:', result.data?.hatchedAnimal);
-
     return result.data?.hatchedAnimal ?? null;
   } catch (error) {
     console.error('Failed to connect to backend:', error);
