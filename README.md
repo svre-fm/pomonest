@@ -14,7 +14,7 @@ This project is an application inspired by the Pomodoro technique that combines 
 
 ---
 
-Create a `.env` file in the project root with the following values:
+Create a `.env` file in the `backend` with the following values:
 
 ```env
 POSTGRES_HOST=localhost
@@ -47,7 +47,14 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ---
 
+
+
+```md
 ### Docker
+
+- Open `init.sh` in VS Code.
+- Change the line ending from `CRLF` to `LF`.
+- Save the file.
 
 ```bash
 docker compose up -d --build
