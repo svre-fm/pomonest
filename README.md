@@ -47,9 +47,6 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ---
 
-
-
-```md
 ### Docker
 
 - Open `init.sh` in VS Code.
@@ -75,3 +72,5 @@ pnpm run dev
 cd frontend
 pnpm run build
 ```
+
+You can access the frontend at http://localhost:6012/login

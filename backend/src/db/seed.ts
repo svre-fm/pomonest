@@ -3,7 +3,7 @@ import { dbClient } from "@db/client.js";
 import { eggs, animals, eggRewards } from "@db/schema.js";
 
 async function seed() {
-  console.log("🌱 Seeding master data (eggs, animals, egg_rewards)...");
+  console.log("Seeding master data (eggs, animals, egg_rewards)...");
 
   try {
     const existingEggs = await dbClient.select().from(eggs);
@@ -17,7 +17,7 @@ async function seed() {
       .insert(eggs)
       .values({
         name: "common Egg",
-        required: 30,
+        required: 1, // Test: 1 min, normally 30 min.
         image: "common.png",
       })
       .returning();
@@ -58,7 +58,7 @@ async function seed() {
       ])
       .returning();
 
-    console.log(`✅ Seeded ${insertedAnimals.length} animals`);
+    console.log(`Seeded ${insertedAnimals.length} animals`);
 
     // 3. Egg Rewards
     const rareDropRates: Record<string, number> = {
