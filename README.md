@@ -16,7 +16,7 @@ pnpm install
 
 ---
 
-Create a `.env` file in the `backend` with the following values:
+Create a `.env` file in `root path` of the project and `backend` with the following values:
 
 ```env
 POSTGRES_HOST=localhost
@@ -34,7 +34,6 @@ FRONTEND_URL=http://localhost:6012
 BACKEND_URL=http://localhost:3001
 ```
 
-
 Create a `.env` file in the `frontend` folder with the following values:
 
 ```env
@@ -50,7 +49,7 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ### Docker
 
-- Open `init.sh` in VS Code.
+- Open `\_entrypoint\init.sh` in VS Code.
 - Change the line ending from `CRLF` to `LF`.
 - Save the file.
 
