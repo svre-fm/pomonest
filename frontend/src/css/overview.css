@@ -1,0 +1,87 @@
+.filter-container {
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+    justify-content: center;
+    width: 60%;
+}
+
+.select-filter {
+  padding: 5px 16px;
+  border: 2px solid #c2b197b4;
+  color: #4a332057;
+  border-radius: 15px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  box-shadow: none;
+}
+
+.select-filter:hover {
+  background-color: #ffc773;
+  border-color: #ffc773;
+  color: #4a3320;
+}
+
+.select-filter:active {
+    transform: none;
+}
+
+.card-user{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    background-color: #ffffff ;
+    border-radius: 10px;
+    padding: 15px;
+    width: 33%;
+    border: 2px solid #f3ead5;
+    box-shadow: 0 3px 12px #7e7e7e23;
+}
+
+.card-focus-chart{
+    background-color: #ffffff ;
+    border: 2px solid #f3ead5;
+    box-shadow: 0 3px 12px #7e7e7e23;
+    border-radius: 10px;
+    padding: 15px;
+    width: 85%;
+}
+
+.dot-color-verified {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #a5c572;
+}
+
+.dot-color-not-verified {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ff4d4d;
+}
+
+.recent-registered-users {
+  width: 90%;
+  padding: 16px;
+  border: 2px solid #f3ead5;
+  box-shadow: 0 4px 12px #7e7e7e23;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.header-recent-users {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.header-recent-users h3 {
+  margin: 0;
+}

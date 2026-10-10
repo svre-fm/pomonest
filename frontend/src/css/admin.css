@@ -1,0 +1,73 @@
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #4a3320;
+}
+
+.admin-layout-content {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.overview-page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    width: 100%;
+    min-width: 0;
+}
+
+.layout-card{
+    width: 90%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.card-item{
+    background-color: #ffffff ;
+    border-radius: 10px;
+    padding: 15px;
+    width: 100%;
+    border: 2px solid #f3ead5;
+    box-shadow: 0 4px 12px #7e7e7e23;
+}
+
+table {
+  width: 100%;
+  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+th,
+td {
+  padding: 12px;
+}
+
+th {
+  font-weight: normal;
+}
+
+tr.row td {
+  border-top: 2px solid #fad48f;
+  border-bottom: 2px solid #fad48f;
+}
+
+tr.row td:first-child {
+  border-left: 2px solid #fad48f;
+  border-radius: 10px 0 0 10px;
+}
+
+tr.row td:last-child {
+  border-right: 2px solid #fad48f;
+  border-radius: 0 10px 10px 0;
+}
