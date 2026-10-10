@@ -9,6 +9,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { start } from "node:repl";
+import { isDataView } from "node:util/types";
 
 //ENUM
 
@@ -53,6 +54,8 @@ export const users = pgTable("users", {
 
   role: userRoleEnum("role").default("user").notNull(),
 
+  isActive: boolean("is_active").default(true).notNull(),
+
   emailVerified: boolean("email_verified").default(false).notNull(),
 
   verificationToken: varchar("verification_token", { length: 255 }),
@@ -61,6 +64,17 @@ export const users = pgTable("users", {
     withTimezone: true,
   }),
 
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+//admin_log actions
+export const adminLogs = pgTable("admin_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  adminId: uuid("admin_id").references(() => users.id).notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  targetType: varchar("target_type", { length: 30 }).notNull(),
+  targetId: varchar("target_id", { length: 64 }),
+  details: varchar("details", { length: 255 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
