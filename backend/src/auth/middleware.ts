@@ -35,3 +35,22 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   req.user = payload;
   next();
 }
+
+/**
+ * Middleware ตรวจสอบสิทธิ์ Admin
+ * ต้องใช้ร่วมกับ requireAuth (หรือถ้ายังไม่มี req.user จะส่ง 401)
+ * ถ้าไม่ใช่ admin → return 403 Forbidden
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ error: "Authentication required. Please log in." });
+    return;
+  }
+
+  if (req.user.role !== "admin") {
+    res.status(403).json({ error: "Access denied. Admin privileges required." });
+    return;
+  }
+
+  next();
+}

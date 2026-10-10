@@ -34,6 +34,11 @@ export const rarityEnum = pgEnum("rarity", [
   "epic",
 ]);
 
+export const userRoleEnum = pgEnum("user_role", [
+  "user",
+  "admin",
+]);
+
 //user table
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -45,6 +50,8 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
 
   avatar: varchar("avatar", { length: 255 }),
+
+  role: userRoleEnum("role").default("user").notNull(),
 
   emailVerified: boolean("email_verified").default(false).notNull(),
 
