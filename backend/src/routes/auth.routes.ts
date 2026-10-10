@@ -186,7 +186,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 
     // Issue JWT token — rememberMe = true → 30 days, false → 1 day
     const token = signToken(
-      { userId: user.id, email: user.email, username: user.username, role: user.role },
+      { userId: user.id, email: user.email, username: user.username},
       Boolean(rememberMe)
     );
 

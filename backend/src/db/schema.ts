@@ -78,6 +78,14 @@ export const adminLogs = pgTable("admin_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// export const userspam = pgTable("user_spam", {
+//   id: uuid("id").defaultRandom().primaryKey(),
+//   userId: uuid("user_id").references(() => users.id).notNull(),
+//   reason: varchar("reason", { length: 255 }).notNull(),
+//   dateend: time("dateend", { withTimezone: true }),
+//   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+// });
+
 //categories table
 export const categories = pgTable("categories", {
   id: uuid("id").defaultRandom().primaryKey(),

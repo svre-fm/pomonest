@@ -53,10 +53,12 @@ app.use("/api", gamificationRoutes);
 // ==========================================
 // Admin Routes (Protected by requireAuth & requireAdmin)
 // ==========================================
-app.use("/api/admin/users", requireAuth, requireAdmin, adminUsersRoutes);
-app.use("/api/admin/eggs", requireAuth, requireAdmin, adminEggsRoutes);
-app.use("/api/admin/animals", requireAuth, requireAdmin, adminAnimalsRoutes);
-app.use("/api/admin/egg-rewards", requireAuth, requireAdmin, adminRewardsRoutes);
+app.use("/api/admin", requireAuth, requireAdmin);
+
+app.use("/api/admin/users", adminUsersRoutes);
+app.use("/api/admin/eggs", adminEggsRoutes);
+app.use("/api/admin/animals", adminAnimalsRoutes);
+app.use("/api/admin/egg-rewards", adminRewardsRoutes);
 
 // ==========================================
 // Background Jobs

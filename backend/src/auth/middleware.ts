@@ -1,5 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyToken, type JwtPayload } from "./jwt.js";
+import { eq } from "drizzle-orm";
+import { dbClient } from "@db/client.js";
+import { users } from "@db/schema.js";
 
 // ขยาย interface ของ express Request ให้มี user field
 declare global {
@@ -41,16 +44,31 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
  * ต้องใช้ร่วมกับ requireAuth (หรือถ้ายังไม่มี req.user จะส่ง 401)
  * ถ้าไม่ใช่ admin → return 403 Forbidden
  */
-export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+export async function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   if (!req.user) {
     res.status(401).json({ error: "Authentication required. Please log in." });
     return;
   }
 
-  if (req.user.role !== "admin") {
-    res.status(403).json({ error: "Access denied. Admin privileges required." });
-    return;
-  }
+  try {
+    const [account] = await dbClient
+      .select({ role: users.role, isActive: users.isActive })
+      .from(users)
+      .where(eq(users.id, req.user.userId))
+      .limit(1);
 
-  next();
+    if (!account || !account.isActive || account.role !== "admin") {
+      res.status(403).json({ error: "Access denied. Admin privileges required." });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    console.error("requireAdmin error:", error);
+    res.status(500).json({ error: "Failed to verify admin access" });
+  }
 }
