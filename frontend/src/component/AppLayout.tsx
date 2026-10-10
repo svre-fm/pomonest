@@ -72,7 +72,7 @@ export default function AppLayout() {
                 <FontAwesomeIcon icon={faGear} style={{ color: '#806a5aff' }} /><span>account</span>
               </button>
               <button className="button-logout" onClick={handleLogout}>
-                <FontAwesomeIcon icon={faDoorOpen} style={{ color: '#806a5aff' }} /><span>sign out</span>
+                <FontAwesomeIcon icon={faDoorOpen} style={{ color: '#806a5aff' }} /><span>Log out</span>
               </button>
             </div>
           )}

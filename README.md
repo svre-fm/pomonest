@@ -50,7 +50,7 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ### Docker
 
-- Open `init.sh` in VS Code.
+- Open `_entrypoint/init.sh` in VS Code.
 - Change the line ending from `CRLF` to `LF`.
 - Save the file.
 

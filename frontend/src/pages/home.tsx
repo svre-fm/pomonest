@@ -110,7 +110,7 @@ export default function Home() {
                 const layout = ANIMAL_LAYOUT[animal.animalName];
 
                 if (!layout) return null;
-
+ 
                 return (
                   <div className={layout.className} key={animal.id}>
                     {layout.shadow && (
