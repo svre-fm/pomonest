@@ -1270,21 +1270,19 @@ app.get('/api/statistics', requireAuth, async (req: Request, res: Response) => {
     const viewMode = (req.query.mode as string) || 'week';
     const selectedDateStr = (req.query.date as string) || 'Today';
 
-    // ดึงข้อมูลเซสชันการโฟกัสที่สำเร็จทั้งหมดของ User นี้
+    // ดึงข้อมูลเซสชันการโฟกัสที่สำเร็จทั้งหมดของผู้ใช้
     const allSessions = await dbClient
       .select()
       .from(focusSessions)
       .where(and(eq(focusSessions.userId, userId), eq(focusSessions.status, 'completed')));
 
     const now = new Date();
-    // ฟังก์ชันช่วยแปลงวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD
     const formatDate = (d: Date) => {
       const offset = d.getTimezoneOffset() * 60000;
       return new Date(d.getTime() - offset).toISOString().split('T')[0];
     };
     const todayStr = formatDate(now);
 
-    // ฟังก์ชันเช็คว่าข้อมูลตรงกับวันที่หรือ Label ที่ผู้ใช้คลิกหรือไม่
     const matchesSelected = (dateVal: Date | null | undefined) => {
       if (!dateVal) return false;
       const d = new Date(dateVal);
@@ -1296,74 +1294,82 @@ app.get('/api/statistics', requireAuth, async (req: Request, res: Response) => {
       return false;
     };
 
-    // สร้างข้อมูลกราฟ Heatmap (คำนวณเวลารวมรายวัน/เดือน)
+    // การดึงข้อมูล Tasks, Categories, Activities เพื่อให้ Heatmap ใช้จัดกลุ่มได้
+    const allTasks = await dbClient.select().from(tasks).where(eq(tasks.userId, userId));
+    const allCategories = await dbClient.select().from(categories).where(eq(categories.userId, userId));
+    const allActivities = await dbClient.select().from(activities).where(eq(activities.userId, userId));
+
+    // ฟังก์ชันช่วยหาชื่อ Category
+    const getCategoryName = (taskId: string | null, activityId: string | null) => {
+      if (taskId) {
+        const task = allTasks.find(t => t.id === taskId);
+        if (task && task.categoryId) {
+          const cat = allCategories.find(c => c.id === task.categoryId);
+          if (cat) return cat.name;
+        }
+      } else if (activityId) {
+        const act = allActivities.find(a => a.id === activityId);
+        if (act) return act.name;
+      }
+      return 'Uncategorized';
+    };
+
+    // สร้างข้อมูลกราฟ Heatmap จัดกลุ่มตาม Category แทนแสดงเป็น Task ย่อย
     const heatmapMap = new Map<string, number>();
+    
     allSessions.forEach(session => {
       if (!session.startTime) return;
       const d = new Date(session.startTime);
       const minutes = Math.floor(session.duration / 60);
 
-      let label = "";
+      let isMatchMode = false;
+      // เช็คว่า session นี้อยู่ในช่วงเวลาของ viewMode ปัจจุบันหรือไม่
       if (viewMode === 'week') {
-        label = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0,0,0,0);
+        if (d >= startOfWeek) isMatchMode = true;
       } else if (viewMode === 'month') {
         if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-          label = d.getDate().toString();
+          isMatchMode = true;
         }
       } else if (viewMode === 'year') {
         if (d.getFullYear() === now.getFullYear()) {
-          label = d.toLocaleDateString('en-US', { month: 'short' });
+          isMatchMode = true;
         }
       }
 
-      if (label) {
-        heatmapMap.set(label, (heatmapMap.get(label) || 0) + minutes);
+      // นำ Session ที่ตรงกับเวลาที่เลือก มาบวกเวลาเข้า Category 
+      if (isMatchMode) {
+        const catName = getCategoryName(session.taskId, session.activityId);
+        heatmapMap.set(catName, (heatmapMap.get(catName) || 0) + minutes);
       }
     });
 
+    // แปลง Map เป็น Array เพื่อส่งกลับไปที่ Frontend
     const heatmap: { label: string; minutes: number }[] = [];
-    if (viewMode === 'week') {
-      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
-        heatmap.push({ label: day, minutes: heatmapMap.get(day) || 0 });
-      });
-    } else if (viewMode === 'month') {
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      for (let i = 1; i <= daysInMonth; i++) {
-        const lbl = i.toString();
-        heatmap.push({ label: lbl, minutes: heatmapMap.get(lbl) || 0 });
-      }
-    } else if (viewMode === 'year') {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      months.forEach(m => {
-        heatmap.push({ label: m, minutes: heatmapMap.get(m) || 0 });
-      });
-    }
+    heatmapMap.forEach((minutes, label) => {
+      heatmap.push({ label, minutes });
+    });
 
-    // กรองเซสชันเฉพาะวันที่ถูกเลือก เพื่อคำนวณ Summary และ Categories
+    // คำนวณ Summary และ Donut Chart
     const targetSessions = allSessions.filter(s => matchesSelected(s.startTime));
     const totalMinutes = targetSessions.reduce((sum, s) => sum + Math.floor(s.duration / 60), 0);
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     const totalFocusStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
 
-    // นับจำนวน Task ที่เสร็จในวันนั้น
     const completedTasksDB = await dbClient
       .select()
       .from(tasks)
       .where(and(eq(tasks.userId, userId), eq(tasks.status, 'done')));
     const completedTasksCount = completedTasksDB.filter(t => matchesSelected(t.completedAt)).length;
 
-    // นับจำนวนไข่ที่ฟักในวันนั้น
     const hatchedEggsDB = await dbClient
       .select()
       .from(userEggs)
       .where(and(eq(userEggs.userId, userId), eq(userEggs.status, 'hatched')));
     const hatchedEggsCount = hatchedEggsDB.filter(e => matchesSelected(e.hatchedAt)).length;
-
-    // คำนวณสัดส่วนเวลาที่ใช้ไปในแต่ละหมวดหมู่ (Categories / Activities)
-    const allTasks = await dbClient.select().from(tasks).where(eq(tasks.userId, userId));
-    const allCategories = await dbClient.select().from(categories).where(eq(categories.userId, userId));
-    const allActivities = await dbClient.select().from(activities).where(eq(activities.userId, userId));
 
     const catMap = new Map<string, { name: string; color: string; duration: number }>();
 

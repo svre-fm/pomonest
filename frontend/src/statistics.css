@@ -28,24 +28,30 @@
   background-color: white;
   border-radius: 50px;
   padding: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: none;
+  gap: 10px;
 }
 
 .toggle-btn {
   padding: 8px 24px;
   border: none;
-  background: transparent;
+  background: #ebf0e6;
   border-radius: 50px;
   font-weight: bold;
   color: #8c735e;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow : none
 }
 
 .toggle-btn.active {
   background-color: #dbe4ce; 
   color: #4a6c35;
-  box-shadow: 0 3px 0 #9abf7c;
+  box-shadow : none;
+}
+
+.toggle-btn:active {
+  transform: none;
 }
 
 /* การ์ดสรุปผล */
@@ -139,15 +145,15 @@
 }
 
 .heatmap-label {
-  font-size: 12px;
+  font-size: 15px;
   font-weight: bold;
   margin-bottom: 5px;
   color: inherit;
 }
 
 .heatmap-value {
-  font-size: 11px;
-  opacity: 0.8;
+  font-size: 12px;
+  color: #c87430;
 }
 
 /* ระดับสี 5 ระดับ */
@@ -162,13 +168,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 30px;
+  gap: 80px;
   flex: 1;
 }
 
 .donut-chart {
-  width: 140px;
-  height: 140px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   position: relative;
   display: flex;
@@ -177,8 +183,8 @@
 }
 
 .donut-hole {
-  width: 80px;
-  height: 80px;
+  width: 150px;
+  height: 150px;
   background-color: white;
   border-radius: 50%;
   position: absolute;
@@ -193,7 +199,7 @@
 .legend-item {
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: 15px;
   color: #8c735e;
 }
 

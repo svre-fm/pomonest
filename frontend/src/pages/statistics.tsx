@@ -34,10 +34,12 @@ export default function Statistics() {
         
         // แนบ Token ไปกับ Headers
         const res = await fetch(`/api/statistics?mode=${viewMode}&date=${selectedDate}`, {
+          method: 'GET',
+          cache: 'no-store', // 🌟 เพิ่มบรรทัดนี้: บังคับไม่ให้เบราว์เซอร์จำข้อมูลเก่า
           headers: {
             'Authorization': `Bearer ${token}`
           }
-        }); 
+        });
         
         if (!res.ok) {
           throw new Error('Failed to fetch stats');
@@ -111,7 +113,7 @@ export default function Statistics() {
         </div>
       </div>
 
-      <h3 style={{ margin: '0 0 15px 0', color: '#4a3320' }}>
+      <h3 style={{ margin: '0 0 15px 0', color: '#4a3320', fontSize: '18px' }}>
         {summary.title}
       </h3>
 
@@ -133,13 +135,12 @@ export default function Statistics() {
       <div className="charts-container">
         
         <div className="chart-card" style={{ flex: 1.5 }}>
-          <h3 className="chart-title">Focus Heatmap ({viewMode})</h3>
+          <h3 className="chart-title">Category Heatmap ({viewMode})</h3>
           <div className={`heatmap-grid ${viewMode}`}>
             {heatmapData.map((data: HeatmapData, index: number) => (
               <div 
                 key={index} 
-                className={`heatmap-item ${getHeatmapLevel(data.minutes)} ${selectedDate === data.label ? 'selected' : ''}`}
-                onClick={() => setSelectedDate(data.label)}
+                className={`heatmap-item ${getHeatmapLevel(data.minutes)}`}
               >
                 <span className="heatmap-label">{data.label}</span>
                 <span className="heatmap-value">{data.minutes}m</span>

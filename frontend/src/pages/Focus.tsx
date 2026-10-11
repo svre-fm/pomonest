@@ -138,7 +138,7 @@ export default function FocusSession() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [songDuration, setSongDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isFirstAudioLoad = useRef(true); // 🌟 เพิ่มตัวเช็คว่าเป็นการโหลดไฟล์เสียงครั้งแรกหลังกลับมาหรือไม่
+  const isFirstAudioLoad = useRef(true);
   
   const segmentStartElapsedRef = useRef(0);
   const segmentStartTimeRef = useRef<Date>(new Date());
@@ -417,8 +417,17 @@ export default function FocusSession() {
   if (loadError) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <p>{loadError}</p>
-        <button className="btn-back-circle" onClick={() => navigate('/focus')}>← Back</button>
+        <p style={{ color: '#4a3320', fontSize: '18px', fontWeight: 'bold' }}>{loadError}</p>
+        <button 
+          className="btn-action end-mode" 
+          style={{ margin: '20px auto', minWidth: '150px' }}
+          onClick={() => {
+            sessionStorage.removeItem('pomonest_active_session');
+            navigate('/selectFocus');
+          }}
+        >
+          ← Go to Select Focus
+        </button>
       </div>
     );
   }
