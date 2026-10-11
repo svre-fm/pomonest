@@ -184,6 +184,12 @@ authRouter.post("/login", async (req: Request, res: Response) => {
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({
+        error: "This account has been disabled. Please contact an administrator.",
+      });
+    }
+
     // Issue JWT token — rememberMe = true → 30 days, false → 1 day
     const token = signToken(
       { userId: user.id, email: user.email, username: user.username},
@@ -215,6 +221,10 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({ error: "This account has been disabled." });
     }
 
     res.status(200).json({

@@ -1,8 +1,8 @@
 // import { useEffect, useState, useRef, useCallback } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircleInfo, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
+import { faCircleInfo, faMagnifyingGlass, faBan } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare } from '@fortawesome/free-regular-svg-icons';
 import '../css/usersmanage.css';
 import '../css/admin.css';
 
@@ -74,7 +74,7 @@ export default function Usersmanage() {
                             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                                 <FontAwesomeIcon icon={faCircleInfo} style={{color : '#5298daff'}}/>
                                 <FontAwesomeIcon icon={faPenToSquare} style={{color : '#a3bd5bff'}}/> 
-                                <FontAwesomeIcon icon={faTrashCan} style={{color : '#da6652ff'}}/>
+                                <FontAwesomeIcon icon={faBan} style={{color : '#da6652ff'}}/>
                             </div>
                         </td>
                     </tr>
@@ -89,7 +89,7 @@ export default function Usersmanage() {
                             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                                 <FontAwesomeIcon icon={faCircleInfo} style={{color : '#5298daff'}}/>
                                 <FontAwesomeIcon icon={faPenToSquare} style={{color : '#a3bd5bff'}}/> 
-                                <FontAwesomeIcon icon={faTrashCan} style={{color : '#da6652ff'}}/>
+                                <FontAwesomeIcon icon={faBan} style={{color : '#da6652ff'}}/>
                             </div>
                         </td>
                     </tr>

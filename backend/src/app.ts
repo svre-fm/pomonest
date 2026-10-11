@@ -11,6 +11,7 @@ import adminUsersRoutes from "./routes/admin/admin.users.routes.js";
 import adminEggsRoutes from "./routes/admin/admin.eggs.routes.js";
 import adminAnimalsRoutes from "./routes/admin/admin.animals.routes.js";
 import adminRewardsRoutes from "./routes/admin/admin.rewards.routes.js";
+import adminDashboardRoutes from "./routes/admin/admin.dashborad.routes.ts";
 import { requireAuth, requireAdmin } from "./auth/middleware.js";
 import { startCleanupJob } from "./jobs/cleanup-unverified-users.js";
 
@@ -55,10 +56,12 @@ app.use("/api", gamificationRoutes);
 // ==========================================
 app.use("/api/admin", requireAuth, requireAdmin);
 
+app.use("/api/admin", adminDashboardRoutes);
 app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/admin/eggs", adminEggsRoutes);
 app.use("/api/admin/animals", adminAnimalsRoutes);
 app.use("/api/admin/egg-rewards", adminRewardsRoutes);
+
 
 // ==========================================
 // Background Jobs

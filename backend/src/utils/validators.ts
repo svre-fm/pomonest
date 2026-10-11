@@ -9,6 +9,7 @@ export function formatUser(user: UserRecord) {
     email: user.email,
     avatar: user.avatar,
     role: user.role,
+    isActive: user.isActive,
     createdAt: user.createdAt,
   };
 }

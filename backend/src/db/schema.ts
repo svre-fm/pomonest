@@ -8,8 +8,6 @@ import {
   boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { start } from "node:repl";
-import { isDataView } from "node:util/types";
 
 //ENUM
 
@@ -70,7 +68,8 @@ export const users = pgTable("users", {
 //admin_log actions
 export const adminLogs = pgTable("admin_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
-  adminId: uuid("admin_id").references(() => users.id).notNull(),
+  adminId: uuid("admin_id").references(() => users.id, { onDelete: "set null" }),
+  adminName: varchar("admin_name", { length: 50 }).notNull(),
   action: varchar("action", { length: 50 }).notNull(),
   targetType: varchar("target_type", { length: 30 }).notNull(),
   targetId: varchar("target_id", { length: 64 }),
@@ -78,20 +77,12 @@ export const adminLogs = pgTable("admin_logs", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// export const userspam = pgTable("user_spam", {
-//   id: uuid("id").defaultRandom().primaryKey(),
-//   userId: uuid("user_id").references(() => users.id).notNull(),
-//   reason: varchar("reason", { length: 255 }).notNull(),
-//   dateend: time("dateend", { withTimezone: true }),
-//   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-// });
-
 //categories table
 export const categories = pgTable("categories", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
 
   name: varchar("name", { length: 100 }).notNull(),
@@ -124,7 +115,7 @@ export const activities = pgTable("activities", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
 
   name: varchar("name", { length: 100 }).notNull(),
@@ -148,11 +139,11 @@ export const userEggs = pgTable("user_eggs", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
 
   eggId: integer("egg_id")
-    .references(() => eggs.id)
+    .references(() => eggs.id, { onDelete: "cascade" })
     .notNull(),
 
   progress: integer("progress").default(0).notNull(),
@@ -169,15 +160,15 @@ export const focusSessions = pgTable("focus_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "set null" })
     .notNull(),
 
-  taskId: uuid("task_id").references(() => tasks.id),
+  taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
 
-  activityId: uuid("activity_id").references(() => activities.id),
+  activityId: uuid("activity_id").references(() => activities.id, { onDelete: "set null" }),
 
   userEggId: uuid("user_egg_id")
-    .references(() => userEggs.id)
+    .references(() => userEggs.id, { onDelete: "cascade" })
     .notNull(),
 
   startTime: timestamp("start_time", { withTimezone: true }).notNull(),
@@ -210,11 +201,11 @@ export const eggRewards = pgTable("egg_rewards", {
   id: serial("id").primaryKey(),
 
   eggId:  integer("egg_id")
-    .references(() => eggs.id)
+    .references(() => eggs.id, { onDelete: "cascade" })
     .notNull(),
 
   animalId: integer("animal_id")
-    .references(() => animals.id)
+    .references(() => animals.id, { onDelete: "cascade" })
     .notNull(),
 
   dropRate: integer("drop_rate").notNull(),
@@ -226,11 +217,11 @@ export const userAnimals = pgTable("user_animals", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
 
   animalId: integer("animal_id")
-    .references(() => animals.id)
+    .references(() => animals.id, { onDelete: "cascade" })
     .notNull(),
 
   nickname: varchar("nickname", { length: 100 }),

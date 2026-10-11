@@ -17,6 +17,11 @@ import AppLayout from './component/AppLayout';
 import Collection from './pages/collection';
 import Focus from './pages/Focus';
 
+//admin
+import MenuLayout from './admin/MenuLayout';
+import Overview from './admin/Overview';
+import Usersmanage from './admin/Usersmanage';
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -97,6 +102,15 @@ function App() {
           <Route path="/selectFocus" element={<SelectFocus />} />
           <Route path="/collection" element={<Collection />} />
         </Route>
+
+        <Route
+          element={isLoggedIn ? <MenuLayout /> : <Navigate to="/login" replace />}
+        >
+          <Route path="/overview" element={<Overview />} />
+          <Route path="/usermanage" element={<Usersmanage />} />
+        </Route>
+
+
 
         <Route path="*" element={<Navigate to="/login" replace />} />
 

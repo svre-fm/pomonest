@@ -12,6 +12,7 @@ import {
   userAnimals,
 } from "@db/schema.js";
 import { isValidUUID, formatUser } from "../../utils/validators.js";
+import { runAsAdmin, logAdminAction } from "../../utils/adminHelpers.js";
 
 const adminUsersRouter = Router();
 
@@ -21,7 +22,7 @@ const adminUsersRouter = Router();
 // ==========================================
 adminUsersRouter.get("/", async (req: Request, res: Response) => {
   try {
-    const { search, role, page = "1", limit = "20" } = req.query;
+      const { search, role, status, page = "1", limit = "20" } = req.query;
 
     const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
@@ -37,6 +38,9 @@ adminUsersRouter.get("/", async (req: Request, res: Response) => {
     if (role && (role === "user" || role === "admin")) {
       conditions.push(eq(users.role, role));
     }
+  
+    if (status === "active") conditions.push(eq(users.isActive, true));
+    if (status === "disabled") conditions.push(eq(users.isActive, false));
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -201,11 +205,9 @@ adminUsersRouter.put("/:id", async (req: Request, res: Response) => {
       updates.avatar = avatar ? String(avatar).trim() : null;
     }
 
+    // เปลี่ยน role ต้องผ่าน PATCH /:id/role เท่านั้น (มีการป้องกันตัวเอง + บันทึก log)
     if (role !== undefined) {
-      if (role !== "user" && role !== "admin") {
-        return res.status(400).json({ error: "Invalid role value. Must be 'user' or 'admin'" });
-      }
-      updates.role = role;
+      return res.status(400).json({ error: "Use PATCH /api/admin/users/:id/role to change a role" });
     }
 
     if (emailVerified !== undefined) {
@@ -220,15 +222,33 @@ adminUsersRouter.put("/:id", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "No fields provided to update" });
     }
 
-    const [updatedUser] = await dbClient
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, userId))
-      .returning();
+    const adminId = req.user!.userId;
+    const result = await runAsAdmin(adminId, async (tx, adminName) => {
+      const [updatedUser] = await tx
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, userId))
+        .returning();
+
+      await logAdminAction(tx, {
+        adminId,
+        adminName,
+        action: "edit_user",
+        targetType: "user",
+        targetId: userId,
+        details: `${existing.email}: ${Object.keys(updates)
+          .filter((key) => !key.startsWith("verification"))
+          .join(", ")}`,
+      });
+
+      return { ok: true as const, value: updatedUser };
+    });
+
+    if (!result.ok) return res.status(result.status).json({ error: result.error });
 
     res.status(200).json({
       message: "User updated successfully",
-      data: formatUser(updatedUser),
+      data: formatUser(result.value),
     });
   } catch (error) {
     console.error("Error updating user by admin:", error);
@@ -238,40 +258,59 @@ adminUsersRouter.put("/:id", async (req: Request, res: Response) => {
 
 // ==========================================
 // PATCH /api/admin/users/:id/role - เปลี่ยน Role ผู้ใช้
+// body: { role: "user" | "admin" }
 // ==========================================
 adminUsersRouter.patch("/:id/role", async (req: Request, res: Response) => {
+  const userId = String(req.params.id);
+  const adminId = req.user!.userId;
+  const { role } = req.body ?? {};
+
+  if (!isValidUUID(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+  if (role !== "user" && role !== "admin") {
+    return res.status(400).json({ error: "Role must be 'user' or 'admin'" });
+  }
+  // กัน admin ลดสิทธิ์ตัวเองจนระบบไม่เหลือ admin
+  if (userId === adminId) {
+    return res.status(400).json({ error: "You cannot change your own role" });
+  }
+
   try {
-    const userId = String(req.params.id);
+    const result = await runAsAdmin(adminId, async (tx, adminName) => {
+      const [target] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .for("update");
 
-    if (!isValidUUID(userId)) {
-      return res.status(400).json({ error: "Invalid user ID format" });
-    }
+      if (!target) return { ok: false as const, status: 404, error: "User not found" };
+      if (target.role === role) return { ok: true as const, value: target }; // ไม่มีอะไรเปลี่ยน
 
-    const { role } = req.body;
+      const [updated] = await tx
+        .update(users)
+        .set({ role })
+        .where(eq(users.id, userId))
+        .returning();
 
-    if (!role || (role !== "user" && role !== "admin")) {
-      return res.status(400).json({ error: "Role must be 'user' or 'admin'" });
-    }
+      await logAdminAction(tx, {
+        adminId,
+        adminName,
+        action: "change_role",
+        targetType: "user",
+        targetId: userId,
+        details: `${target.email}: ${target.role} -> ${role}`,
+      });
 
-    const [existing] = await dbClient
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+      return { ok: true as const, value: updated };
+    });
 
-    if (!existing) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const [updatedUser] = await dbClient
-      .update(users)
-      .set({ role })
-      .where(eq(users.id, userId))
-      .returning();
+    if (!result.ok) return res.status(result.status).json({ error: result.error });
 
     res.status(200).json({
       message: `User role updated to ${role} successfully`,
-      data: formatUser(updatedUser),
+      data: formatUser(result.value),
     });
   } catch (error) {
     console.error("Error updating user role:", error);
@@ -280,41 +319,125 @@ adminUsersRouter.patch("/:id/role", async (req: Request, res: Response) => {
 });
 
 // ==========================================
+// PATCH /api/admin/users/:id/active - ระงับ / เปิดใช้งานบัญชี
+// ==========================================
+adminUsersRouter.patch("/:id/active", async (req: Request, res: Response) => {
+  const userId = String(req.params.id);
+  const adminId = req.user!.userId;
+  const { isActive } = req.body ?? {};
+
+  if (!isValidUUID(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+  if (typeof isActive !== "boolean") {
+    return res.status(400).json({ error: "isActive must be a boolean" });
+  }
+  if (userId === adminId) {
+    return res.status(400).json({ error: "You cannot disable your own account" });
+  }
+
+  try {
+    const result = await runAsAdmin(adminId, async (tx, adminName) => {
+      const [target] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .for("update");
+
+      if (!target) return { ok: false as const, status: 404, error: "User not found" };
+      if (target.isActive === isActive) return { ok: true as const, value: target };
+
+      const [updated] = await tx
+        .update(users)
+        .set({ isActive })
+        .where(eq(users.id, userId))
+        .returning();
+
+      await logAdminAction(tx, {
+        adminId,
+        adminName,
+        action: isActive ? "enable_user" : "disable_user",
+        targetType: "user",
+        targetId: userId,
+        details: target.email,
+      });
+
+      return { ok: true as const, value: updated };
+    });
+
+    if (!result.ok) return res.status(result.status).json({ error: result.error });
+
+    res.status(200).json({
+      message: isActive ? "User enabled successfully" : "User disabled successfully",
+      data: formatUser(result.value),
+    });
+  } catch (error) {
+    console.error("Error updating user active status:", error);
+    res.status(500).json({ error: "Failed to update user status" });
+  }
+});
+
+// ==========================================
 // DELETE /api/admin/users/:id - ลบผู้ใช้และข้อมูลทั้งหมดที่เกี่ยวข้อง
 // ==========================================
 adminUsersRouter.delete("/:id", async (req: Request, res: Response) => {
+  const userId = String(req.params.id);
+  const adminId = req.user!.userId;
+
+  if (!isValidUUID(userId)) {
+    return res.status(400).json({ error: "Invalid user ID format" });
+  }
+
+  // ป้องกันไม่ให้แอดมินลบบัญชีตัวเองโดยไม่ได้ตั้งใจ
+  if (userId === adminId) {
+    return res.status(400).json({ error: "Cannot delete your own admin account" });
+  }
+
   try {
-    const userId = String(req.params.id);
+    const result = await runAsAdmin(adminId, async (tx, adminName) => {
+      const [target] = await tx
+        .select({ id: users.id, email: users.email, role: users.role })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .for("update");
 
-    if (!isValidUUID(userId)) {
-      return res.status(400).json({ error: "Invalid user ID format" });
-    }
+      if (!target) return { ok: false as const, status: 404, error: "User not found" };
 
-    // ป้องกันไม่ให้แอดมินลบบัญชีตัวเองโดยไม่ได้ตั้งใจ
-    if (req.user?.userId === userId) {
-      return res.status(400).json({ error: "Cannot delete your own admin account" });
-    }
+      if (target.role === "admin") {
+        return {
+          ok: false as const,
+          status: 400,
+          error: "Demote this admin to user before deleting the account",
+        };
+      }
 
-    const [existing] = await dbClient
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+      // ลบข้อมูลที่ผูก foreign key ทั้งหมดของผู้ใช้รายนี้ก่อน
+      // (อยู่ใน transaction เดียว ถ้าขั้นใดพัง ทุกอย่างถูกยกเลิก)
+      await tx.delete(focusSessions).where(eq(focusSessions.userId, userId));
+      await tx.delete(userAnimals).where(eq(userAnimals.userId, userId));
+      await tx.delete(userEggs).where(eq(userEggs.userId, userId));
+      await tx.delete(tasks).where(eq(tasks.userId, userId));
+      await tx.delete(categories).where(eq(categories.userId, userId));
+      await tx.delete(activities).where(eq(activities.userId, userId));
 
-    if (!existing) {
-      return res.status(404).json({ error: "User not found" });
-    }
+      // ลบผู้ใช้
+      await tx.delete(users).where(eq(users.id, userId));
 
-    // ลบข้อมูลที่ผูก foreign key ทั้งหมดของผู้ใช้รายนี้ก่อน
-    await dbClient.delete(focusSessions).where(eq(focusSessions.userId, userId));
-    await dbClient.delete(userAnimals).where(eq(userAnimals.userId, userId));
-    await dbClient.delete(userEggs).where(eq(userEggs.userId, userId));
-    await dbClient.delete(tasks).where(eq(tasks.userId, userId));
-    await dbClient.delete(categories).where(eq(categories.userId, userId));
-    await dbClient.delete(activities).where(eq(activities.userId, userId));
+      await logAdminAction(tx, {
+        adminId,
+        adminName,
+        action: "delete_user",
+        targetType: "user",
+        targetId: userId,
+        details: target.email,
+      });
 
-    // ลบผู้ใช้
-    await dbClient.delete(users).where(eq(users.id, userId));
+      return { ok: true as const, value: null };
+    });
+
+    if (!result.ok) return res.status(result.status).json({ error: result.error });
 
     res.status(200).json({
       message: "User and all associated data deleted successfully",
