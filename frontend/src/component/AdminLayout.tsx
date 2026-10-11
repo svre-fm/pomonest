@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDoorOpen, faGear, faLayerGroup, faUsersGear, faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { faDoorOpen, faLayerGroup, faUsersGear, faDatabase } from '@fortawesome/free-solid-svg-icons';
 import '../home.css';
 import '../css/admin.css';
 
@@ -44,13 +44,13 @@ export default function AppLayout() {
         </div>
 
         <div className="nav-menu">
-          <div className={`nav-item ${isActive('/overview') ? 'active' : ''}`} onClick={() => navigate('/overview')}>
+          <div className={`nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={() => navigate('/admin')}>
             <FontAwesomeIcon icon={faLayerGroup} /> Overview
           </div>
-          <div className={`nav-item ${isActive('/usermanage') ? 'active' : ''}`} onClick={() => navigate('/usermanage')}>
+          <div className={`nav-item ${isActive('/admin/users') ? 'active' : ''}`} onClick={() => navigate('/admin/users')}>
             <FontAwesomeIcon icon={faUsersGear} /> User Management
           </div>
-          <div className={`nav-item ${isActive('/data_management') ? 'active' : ''}`} onClick={() => navigate('/data_management')}>
+          <div className={`nav-item ${isActive('/admin/data') ? 'active' : ''}`} onClick={() => navigate('/admin/data')}>
             <FontAwesomeIcon icon={faDatabase} /> Data Management
           </div>
         </div>
@@ -68,9 +68,6 @@ export default function AppLayout() {
                   <span className="email">{user?.email || 'email not found'}</span>
                 </div>
               </div>
-              <button className="button-logout" onClick={handleLogout}>
-                <FontAwesomeIcon icon={faGear} style={{ color: '#806a5aff' }} /><span>account</span>
-              </button>
               <button className="button-logout" onClick={handleLogout}>
                 <FontAwesomeIcon icon={faDoorOpen} style={{ color: '#806a5aff' }} /><span>Log out</span>
               </button>

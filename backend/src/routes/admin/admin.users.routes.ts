@@ -54,6 +54,7 @@ adminUsersRouter.get("/", async (req: Request, res: Response) => {
     const allUsers = await dbClient
       .select({
         id: users.id,
+        profile: users.avatar,
         username: users.username,
         email: users.email,
         avatar: users.avatar,
@@ -97,6 +98,7 @@ adminUsersRouter.get("/:id", async (req: Request, res: Response) => {
     const [user] = await dbClient
       .select({
         id: users.id,
+        profile: users.avatar,
         username: users.username,
         email: users.email,
         avatar: users.avatar,

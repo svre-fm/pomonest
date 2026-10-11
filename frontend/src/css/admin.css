@@ -14,6 +14,12 @@
   min-width: 0;
 }
 
+.admin-page,
+.admin-layout-content,
+.overview-page-container {
+  box-sizing: border-box;
+}
+
 .overview-page-container {
     display: flex;
     flex-direction: column;
@@ -70,4 +76,95 @@ tr.row td:first-child {
 tr.row td:last-child {
   border-right: 2px solid #fad48f;
   border-radius: 0 10px 10px 0;
+}
+
+.dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.dropdown-filter {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 0px 10px;
+  height: 100%;
+  z-index: 100;
+  border: 1.5px solid #c2b197b4;
+  color: #4a3320c7;
+  border-radius: 10px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  box-shadow: none;
+}
+
+.dropdown-filter:hover {
+  background-color: #def198;
+  border-color: #b4c577;
+  color: #684020;
+}
+
+.dropdown-filter:active {
+  background-color: #def198;
+  border-color: #b4c577;
+  color: #684020;
+  transform: none;
+}
+
+.dropdown-filter.active {
+  background-color: #def198;
+  border-color: #dfebb5;
+  color: #684020;
+  border-radius: 10px 10px 0 0;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100%);
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #fffdf7;
+  border: 1.5px solid #c2b197b4;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 9px 10px rgba(74, 51, 32, 0.13);
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 5px 12px;
+  border-left: none;
+  border-right: none;
+  border-top: 1.5px solid #c2b197b4;
+  border-bottom: none;
+  border-radius: 0;
+  background-color: transparent;
+  font-size: small;
+  color: #4a3320;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.dropdown-item:first-child:hover {
+  background-color: #f8ffda;
+  color: #684020;
+}
+
+.dropdown-item:hover {
+  background-color: #f8ffda;
+  color: #684020;
+}
+
+.dropdown-item:last-child:hover {
+  background-color: #f8ffda;
+  border-radius: 0 0 10px 10px;
+  color: #684020;
+}
+
+.dropdown-item:active{
+  transform: none;
 }

@@ -18,13 +18,24 @@ import Collection from './pages/collection';
 import Focus from './pages/Focus';
 
 //admin
-import MenuLayout from './admin/MenuLayout';
-import Overview from './admin/Overview';
-import Usersmanage from './admin/Usersmanage';
+import AdminLayout from './component/AdminLayout';
+import Overview from './pages/admin/Overview';
+import Usersmanage from './pages/admin/Usersmanage';
+import Datamanage from './pages/admin/Datamanage';
+
+function readStoredRole(): string | undefined {
+  try {
+    return JSON.parse(localStorage.getItem('authUser') || '{}').role;
+  } catch {
+    return undefined;
+  }
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -45,14 +56,17 @@ function App() {
           if (data.data) {
             localStorage.setItem('authUser', JSON.stringify(data.data));
           }
+          setIsAdmin(data.data?.role === 'admin');
           setIsLoggedIn(true);
         } else {
           localStorage.removeItem('authToken');
           localStorage.removeItem('authUser');
+          setIsAdmin(false);         
           setIsLoggedIn(false);
         }
       } catch (error) {
         console.error('Auth check failed:', error);
+        setIsAdmin(false); 
         setIsLoggedIn(false);
       } finally {
         setCheckingAuth(false);
@@ -61,6 +75,11 @@ function App() {
 
     checkAuth();
   }, []);
+
+   const handleLoginSuccess = () => {
+    setIsAdmin(readStoredRole() === 'admin');
+    setIsLoggedIn(true);
+  };
 
   if (checkingAuth) {
     return <div>Loading...</div>;
@@ -75,9 +94,9 @@ function App() {
           path="/login"
           element={
             isLoggedIn ? (
-              <Navigate to="/home" replace />
+              <Navigate to={isAdmin ? '/admin' : '/home'} replace />
             ) : (
-              <Login onLoginSuccess={() => setIsLoggedIn(true)} />
+              <Login onLoginSuccess={handleLoginSuccess} />
             )
           }
         />
@@ -104,15 +123,12 @@ function App() {
         </Route>
 
         <Route
-          element={isLoggedIn ? <MenuLayout /> : <Navigate to="/login" replace />}
+          element={isLoggedIn && isAdmin ? <AdminLayout /> : <Navigate to={isLoggedIn ? '/home' : '/login'} replace />}
         >
-          <Route path="/overview" element={<Overview />} />
-          <Route path="/usermanage" element={<Usersmanage />} />
+          <Route path="/admin" element={<Overview />} />
+          <Route path="/admin/users" element={<Usersmanage />} />
+          <Route path="/admin/data" element={<Datamanage />} />
         </Route>
-
-
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
 
       </Routes>
     </BrowserRouter>

@@ -1,21 +1,36 @@
 .filter-container{
-    border: 1px solid #c2b197b4;
-    width: 90%;
+    width: 100%;
+    position: relative;
     display: flex;
     flex-direction: row;
-    margin-bottom: -21px;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    gap: 15px;
+}
 
+.filter-time{
+    width: 90%;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: -10px ;
 }
 
 .search-form {
-    justify-content: left;
-    position: relative;
-    width: 60%;
+  display: inline-block;
+  gap: 5px;
+  position: relative;
+  width: 60%;
 }
 
 .search-form input {
   width: 60%;
-  padding: 10px 40px 10px 14px;
+  height: 40px;
+  padding: 10px 40px 10px 35px;
   background-color: #ffffff;
   border: 2px solid #e5d5b8;
   border-radius: 20px;
@@ -25,12 +40,14 @@
 }
 
 .search-form input:focus {
+  
   border-color: #ffc773;
 }
 
 .search-icon {
   position: absolute;
-  right: 42%;
+  justify-content: start;
+  padding-left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: #8c735e;
@@ -38,24 +55,56 @@
 }
 
 .group-filter {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    align-items: center;
-    justify-content: right;
-    width: 40%;
-    padding-right: 10px;
-    margin-left: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  align-items: center;
+  justify-content: right;
+  width: 40%;
+  padding-right: 10px;
+  margin-left: 20px;
 }
 
-.dropdown-filter {
-    padding: 1px 10px;
-    height: 80%;
-    border: 2px solid #c2b197b4;
-    color: #4a332057;
-    border-radius: 15px;
-    background-color: transparent;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    box-shadow: none;
+
+.icon {
+  position: relative;
+  box-shadow: none;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
+
+.icon:hover {
+  background-color: transparent;
+}
+
+.icon.faCircleInfo {
+  color: #5298da;
+}
+
+.icon.faCircleInfo:hover {
+  color: rgba(82, 152, 218, 0.438);
+}
+
+.icon.faPenToSquare {
+  color: #a3bd5b;
+}
+
+.icon.faPenToSquare:hover {
+  color: rgba(163, 189, 91, 0.45);
+}
+
+.icon.faBan {
+  color: #da6652;
+}
+
+.icon.faBan:hover {
+  color: rgba(218, 102, 82, 0.45);
+}
+
+.icon:active {
+  transform: none;
+}
+

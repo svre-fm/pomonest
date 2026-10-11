@@ -40,12 +40,19 @@
 }
 
 .card-focus-chart{
-    background-color: #ffffff ;
-    border: 2px solid #f3ead5;
-    box-shadow: 0 3px 12px #7e7e7e23;
-    border-radius: 10px;
-    padding: 15px;
-    width: 85%;
+  position: relative;
+  background-color: #ffffff ;
+  border: 2px solid #f3ead5;
+  box-shadow: 0 3px 12px #7e7e7e23;
+  border-radius: 10px;
+  padding: 15px;
+  width: 85%;
+}
+
+.wrapper{
+  position: absolute;
+  top: 15px;
+  right: 25px;
 }
 
 .dot-color-verified {
@@ -84,4 +91,161 @@
 
 .header-recent-users h3 {
   margin: 0;
+}
+
+/* ===== Overview: ตัวเลขจริง กราฟ และตาราง ===== */
+.ov-value { 
+  font-size: 28px; 
+  font-weight: 700; 
+  margin: 4px 0 0; 
+}
+
+.ov-sub { 
+  margin: 2px 0 0; 
+  font-size: 13px; 
+  color: #8c735e; 
+}
+
+.ov-error {
+  margin-bottom: 16px; 
+  padding: 12px 16px; 
+  border-radius: 12px; 
+  font-size: 14px;
+  background: #fdeceb; 
+  color: #a1352a; 
+  border: 1px solid #f2c4bf;
+}
+
+.ov-donut { 
+  width: clamp(120px, 11vw, 170px); 
+  height: auto; 
+  aspect-ratio: 1; 
+  margin-top: 10px; 
+}
+
+.ov-donut-total { 
+  font-size: 20px; 
+}
+
+/* จัดเนื้อหาในการ์ด Total Users ให้อยู่กึ่งกลางแนวตั้ง แทนที่จะติดขอบบน */
+.card-user { 
+  align-items: center; 
+}
+
+.type-user { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+}
+
+.ov-donut circle { 
+  fill: none; 
+  stroke-width: 14; 
+}
+
+.ov-donut-verified { 
+  stroke: #95c06a; 
+}
+
+.ov-donut-not { 
+  stroke: #f04d4d; 
+}
+
+.ov-donut-empty { 
+  stroke: #e6dcc8; 
+}
+
+.ov-donut-total { 
+  fill: #4a3320; 
+  font-size: 22px; 
+  font-weight: 700; 
+}
+
+/* Focus Activity Chart */
+.ov-chart { 
+  display: flex; 
+  align-items: 
+  flex-end; gap: 6px; 
+  height: 170px; 
+  margin-top: 10px; 
+}
+
+.ov-bar-col { 
+  flex: 1; 
+  min-width: 0; 
+  height: 100%; 
+  display: flex; 
+  flex-direction: 
+  column; align-items: 
+  center; gap: 4px; 
+}
+
+.ov-bar-count { 
+  font-size: 12px; 
+  color: #7a593f; 
+  min-height: 14px; 
+}
+.ov-bar-track { 
+  flex: 1; 
+  width: 100%; 
+  display: flex; 
+  align-items: flex-end; 
+}
+
+.ov-bar { 
+  width: 100%; 
+  background: #ded65a; 
+  border: 1px solid #908339; 
+  border-radius: 6px 6px 0 0; 
+  box-sizing: border-box; 
+}
+
+.ov-bar-label { 
+  font-size: 11px; 
+  color: #8c735e; 
+  min-height: 14px; 
+  white-space: nowrap; 
+}
+
+.dropdown-item.selected { 
+  font-weight: 700; 
+}
+
+/* ตารางผู้ใช้ล่าสุด */
+.group-user{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+.userProfile{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+
+}
+
+.ov-status { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  gap: 10px; 
+}
+
+.ov-badge-disabled { 
+  display: flex;
+  padding: 1px 8px; 
+  border-radius: 999px; 
+  font-size: 11px; 
+  background: #d7f3d0; 
+  color: #73a12a; 
+}
+
+.ov-badge-disabled.not { 
+  padding: 1px 8px; 
+  border-radius: 999px; 
+  font-size: 11px; 
+  background: #fdeceb; 
+  color: #a1352a; 
 }

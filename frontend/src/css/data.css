@@ -1,0 +1,109 @@
+.filter-page{
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+    justify-content: center;
+    width: 60%;
+}
+
+
+.filter-container-data {
+    width: 90%;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: -20px;
+}
+
+.search-form-data {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 45%;
+    
+    left: auto;
+    gap: 5px;
+}
+
+.search-form-data input {
+    width: 100%;
+    height: 40px;
+    padding: 10px 15px 10px 45px;
+    background-color: #ffffff;
+    border: 2px solid #e5d5b8;
+    border-radius: 20px;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.search-form-data input:focus {
+    border-color: #ffc773;
+}
+
+.search-icon-data {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8c735e;
+    pointer-events: none;
+}
+
+.group-filter-data {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    
+    right: 40%;
+}
+
+
+.icon {
+    position: relative;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.icon:hover {
+  background-color: transparent;
+}
+
+.icon.faPenToSquare {
+  color: #a3bd5b;
+}
+
+.icon.faPenToSquare:hover {
+  color: rgba(163, 189, 91, 0.45);
+}
+
+.icon.faBan {
+  color: #da6652;
+}
+
+.icon.faBan:hover {
+  color: rgba(218, 102, 82, 0.45);
+}
+
+.icon:active {
+  transform: none;
+}
+
+.add{
+    display: flex;
+    position: absolute;
+    align-items: center;
+    height: 30px;
+    font-size: 20px;
+    right: 10px;
+}
+
