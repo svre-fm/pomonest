@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHouse, faClock } from '@fortawesome/free-regular-svg-icons';
-import { faEgg, faDoorOpen, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faEgg, faDoorOpen, faChartPie } from '@fortawesome/free-solid-svg-icons';
 import '../home.css';
 
 export default function AppLayout() {
@@ -31,6 +31,11 @@ export default function AppLayout() {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
+
+    // ล้างข้อมูล Focus ที่ค้างอยู่ตอนกด Log out
+    sessionStorage.removeItem('pomonest_focus_progress');
+    sessionStorage.removeItem('pomonest_active_status');
+
     window.location.href = '/login';
   };
 
@@ -44,15 +49,63 @@ export default function AppLayout() {
         </div>
 
         <div className="nav-menu">
-          <div className={`nav-item ${isActive('/home') ? 'active' : ''}`} onClick={() => navigate('/home')}>
+          
+          {/* Home */}
+          <div 
+            className={`nav-item ${isActive('/home') ? 'active' : ''}`} 
+            onClick={() => navigate('/home')}
+          >
             <FontAwesomeIcon icon={faHouse} /> Home
           </div>
-          <div className={`nav-item ${isActive('/focus') ? 'active' : ''}`} onClick={() => navigate('/selectFocus')}>
+          
+          {/* Focus */}
+          <div 
+            className={`nav-item ${isActive('/selectFocus') || isActive('/focus-session') ? 'active' : ''}`} 
+            onClick={(e) => {
+              if (isActive('/focus-session')) {
+                e.preventDefault(); 
+              } else {
+                // เช็คเฉพาะ Active Session ล่าสุดที่เพิ่งเดินออกไปเท่านั้น
+                const activeSessionStr = sessionStorage.getItem('pomonest_active_session');
+                
+                if (activeSessionStr) {
+                  try {
+                    const parsed = JSON.parse(activeSessionStr);
+                    let returnUrl = `/focus-session?userEggId=${parsed.userEggId}`;
+                    if (parsed.taskId) returnUrl += `&taskId=${parsed.taskId}`;
+                    if (parsed.baseEggId) returnUrl += `&baseEggId=${parsed.baseEggId}`;
+                    if (parsed.activityId) returnUrl += `&activityId=${parsed.activityId}`;
+                    
+                    returnUrl += `&pause=true`; 
+                    navigate(returnUrl);
+                    return;
+                  } catch (err) {}
+                }
+                
+                navigate('/selectFocus');
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <FontAwesomeIcon icon={faClock} /> Focus
           </div>
-          <div className={`nav-item ${isActive('/collection') ? 'active' : ''}`} onClick={() => navigate('/collection')}>
+          
+          {/* Collection */}
+          <div 
+            className={`nav-item ${isActive('/collection') ? 'active' : ''}`} 
+            onClick={() => navigate('/collection')}
+          >
             <FontAwesomeIcon icon={faEgg} /> Collection
           </div>
+          
+          {/* Statistics */}
+          <div 
+            className={`nav-item ${isActive('/statistics') ? 'active' : ''}`} 
+            onClick={() => navigate('/statistics')}
+          >
+            <FontAwesomeIcon icon={faChartPie} /> Statistics
+          </div>
+          
         </div>
 
         <div className="profile-section">
@@ -69,9 +122,6 @@ export default function AppLayout() {
                 </div>
               </div>
               <button className="button-logout" onClick={handleLogout}>
-                <FontAwesomeIcon icon={faGear} style={{ color: '#806a5aff' }} /><span>account</span>
-              </button>
-              <button className="button-logout" onClick={handleLogout}>
                 <FontAwesomeIcon icon={faDoorOpen} style={{ color: '#806a5aff' }} /><span>sign out</span>
               </button>
             </div>
@@ -80,7 +130,7 @@ export default function AppLayout() {
       </div>
 
       <div className="main-content">
-        <Outlet /> {/* หน้าจริง (Home, Focus, CreateTodo, Collection) render ตรงนี้ */}
+        <Outlet /> {/* Render Home, Focus, CreateTodo, Collection here */}
       </div>
     </div>
   );

@@ -516,7 +516,7 @@ app.post("/api/timer/save", requireAuth, async (req: Request, res: Response) => 
       return res.status(400).json({ error: "Invalid userEggId" });
     }
 
-    // ← แก้ตรงนี้: ระบุ field เองชัดเจน ไม่พึ่ง shape ของ join ที่เดาไม่ได้
+    // ระบุ field เองชัดเจน ไม่พึ่ง shape ของ join ที่เดาไม่ได้
     const [userEggRow] = await dbClient
       .select({
         id: userEggs.id,
@@ -559,7 +559,7 @@ app.post("/api/timer/save", requireAuth, async (req: Request, res: Response) => 
     let hatchedAnimal = null;
 
     if (resolvedStatus === "completed") {
-      const newProgress = userEggRow.progress + duration;   // ← ใช้ userEggRow ตรงๆ ไม่ต้องเดา key
+      const newProgress = userEggRow.progress + duration;   // ใช้ userEggRow ไม่ต้องเดา key
       const requiredSeconds = userEggRow.required * 60;
       const isFullyHatched = newProgress >= requiredSeconds;
 
@@ -641,6 +641,7 @@ app.get("/api/timer/history", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch history" });
   }
 });
+
 // ==========================================
 // API: Categories (CRUD)
 // ==========================================
@@ -1070,6 +1071,14 @@ app.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) =>
       return res.status(404).json({ error: "Task not found" });
     }
 
+    // 🌟 เพิ่มโค้ดส่วนนี้: ถอด taskId ออกจากประวัติการจับเวลาก่อนลบ เพื่อไม่ให้ติด foreign key
+    // หมายเหตุ: อย่าลืม import focusSessions มาจากไฟล์ schema ด้วยนะครับถ้ายังไม่ได้ import
+    await dbClient
+      .update(focusSessions)
+      .set({ taskId: null })
+      .where(eq(focusSessions.taskId, taskId));
+
+    // จากนั้นค่อยสั่งลบ Task ตามปกติ
     await dbClient
       .delete(tasks)
       .where(and(eq(tasks.id, taskId), eq(tasks.userId, req.user!.userId)));
@@ -1253,6 +1262,159 @@ app.delete("/api/activities/:id", requireAuth, async (req: Request, res: Respons
 });
 
 // ==========================================
+// API สำหรับหน้า Statistics (ดึงข้อมูลจริงจาก Database)
+// ==========================================
+app.get('/api/statistics', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const viewMode = (req.query.mode as string) || 'week';
+    const selectedDateStr = (req.query.date as string) || 'Today';
+
+    // ดึงข้อมูลเซสชันการโฟกัสที่สำเร็จทั้งหมดของ User นี้
+    const allSessions = await dbClient
+      .select()
+      .from(focusSessions)
+      .where(and(eq(focusSessions.userId, userId), eq(focusSessions.status, 'completed')));
+
+    const now = new Date();
+    // ฟังก์ชันช่วยแปลงวันที่ให้อยู่ในฟอร์แมต YYYY-MM-DD
+    const formatDate = (d: Date) => {
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().split('T')[0];
+    };
+    const todayStr = formatDate(now);
+
+    // ฟังก์ชันเช็คว่าข้อมูลตรงกับวันที่หรือ Label ที่ผู้ใช้คลิกหรือไม่
+    const matchesSelected = (dateVal: Date | null | undefined) => {
+      if (!dateVal) return false;
+      const d = new Date(dateVal);
+      if (selectedDateStr === 'Today') return formatDate(d) === todayStr;
+      
+      if (viewMode === 'week') return d.toLocaleDateString('en-US', { weekday: 'short' }) === selectedDateStr;
+      if (viewMode === 'month') return d.getMonth() === now.getMonth() && d.getDate().toString() === selectedDateStr;
+      if (viewMode === 'year') return d.getFullYear() === now.getFullYear() && d.toLocaleDateString('en-US', { month: 'short' }) === selectedDateStr;
+      return false;
+    };
+
+    // สร้างข้อมูลกราฟ Heatmap (คำนวณเวลารวมรายวัน/เดือน)
+    const heatmapMap = new Map<string, number>();
+    allSessions.forEach(session => {
+      if (!session.startTime) return;
+      const d = new Date(session.startTime);
+      const minutes = Math.floor(session.duration / 60);
+
+      let label = "";
+      if (viewMode === 'week') {
+        label = d.toLocaleDateString('en-US', { weekday: 'short' });
+      } else if (viewMode === 'month') {
+        if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+          label = d.getDate().toString();
+        }
+      } else if (viewMode === 'year') {
+        if (d.getFullYear() === now.getFullYear()) {
+          label = d.toLocaleDateString('en-US', { month: 'short' });
+        }
+      }
+
+      if (label) {
+        heatmapMap.set(label, (heatmapMap.get(label) || 0) + minutes);
+      }
+    });
+
+    const heatmap: { label: string; minutes: number }[] = [];
+    if (viewMode === 'week') {
+      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+        heatmap.push({ label: day, minutes: heatmapMap.get(day) || 0 });
+      });
+    } else if (viewMode === 'month') {
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      for (let i = 1; i <= daysInMonth; i++) {
+        const lbl = i.toString();
+        heatmap.push({ label: lbl, minutes: heatmapMap.get(lbl) || 0 });
+      }
+    } else if (viewMode === 'year') {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      months.forEach(m => {
+        heatmap.push({ label: m, minutes: heatmapMap.get(m) || 0 });
+      });
+    }
+
+    // กรองเซสชันเฉพาะวันที่ถูกเลือก เพื่อคำนวณ Summary และ Categories
+    const targetSessions = allSessions.filter(s => matchesSelected(s.startTime));
+    const totalMinutes = targetSessions.reduce((sum, s) => sum + Math.floor(s.duration / 60), 0);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    const totalFocusStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+
+    // นับจำนวน Task ที่เสร็จในวันนั้น
+    const completedTasksDB = await dbClient
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), eq(tasks.status, 'done')));
+    const completedTasksCount = completedTasksDB.filter(t => matchesSelected(t.completedAt)).length;
+
+    // นับจำนวนไข่ที่ฟักในวันนั้น
+    const hatchedEggsDB = await dbClient
+      .select()
+      .from(userEggs)
+      .where(and(eq(userEggs.userId, userId), eq(userEggs.status, 'hatched')));
+    const hatchedEggsCount = hatchedEggsDB.filter(e => matchesSelected(e.hatchedAt)).length;
+
+    // คำนวณสัดส่วนเวลาที่ใช้ไปในแต่ละหมวดหมู่ (Categories / Activities)
+    const allTasks = await dbClient.select().from(tasks).where(eq(tasks.userId, userId));
+    const allCategories = await dbClient.select().from(categories).where(eq(categories.userId, userId));
+    const allActivities = await dbClient.select().from(activities).where(eq(activities.userId, userId));
+
+    const catMap = new Map<string, { name: string; color: string; duration: number }>();
+
+    targetSessions.forEach(session => {
+      let catName = 'Uncategorized';
+      let catColor = '#cccccc';
+
+      if (session.taskId) {
+        const task = allTasks.find(t => t.id === session.taskId);
+        if (task && task.categoryId) {
+          const cat = allCategories.find(c => c.id === task.categoryId);
+          if (cat) { catName = cat.name; catColor = cat.color; }
+        }
+      } else if (session.activityId) {
+        const act = allActivities.find(a => a.id === session.activityId);
+        if (act) { catName = act.name; catColor = act.color; }
+      }
+
+      const existing = catMap.get(catName) || { name: catName, color: catColor, duration: 0 };
+      existing.duration += session.duration;
+      catMap.set(catName, existing);
+    });
+
+    const formattedCategories = Array.from(catMap.values()).map(c => {
+      const minutes = Math.floor(c.duration / 60);
+      return {
+        name: c.name,
+        color: c.color,
+        percent: totalMinutes > 0 ? Math.round((minutes / totalMinutes) * 100) : 0
+      };
+    }).filter(c => c.percent > 0);
+
+    // ส่งข้อมูลทั้งหมดกลับไปที่ Frontend
+    res.json({
+      heatmap,
+      summary: {
+        title: selectedDateStr === 'Today' ? "Today's Focus" : `Stats for ${selectedDateStr}`,
+        totalFocus: totalMinutes > 0 ? totalFocusStr : '0m',
+        completedTasks: completedTasksCount,
+        eggsHatched: hatchedEggsCount,
+        totalMinutes
+      },
+      categories: formattedCategories
+    });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// ==========================================
 // API: User Animals (Collection)
 // ==========================================
 
@@ -1358,7 +1520,7 @@ app.get("/api/egg-rewards", async (req: Request, res: Response) => {
   }
 });
 
-//POST 
+// POST /api/user-eggs - เริ่มฟักไข่ (สร้าง userEggs ใหม่)
 app.post("/api/user-eggs", requireAuth, async (req: Request, res: Response) => {
   try {
     const { eggId } = req.body;

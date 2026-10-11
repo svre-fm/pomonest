@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCategories } from '../hooks/useCategories';
 import { useTasks } from '../hooks/useTasks';
@@ -48,10 +48,17 @@ export default function Home() {
 
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('not-done');
 
+  // ป้องกันสัตว์ซ้ำกันเรนเดอร์ทับตำแหน่งเดิม
+  const displayedAnimals = useMemo(() => {
+    return Array.from(
+      new Map(ownedAnimals.map((animal) => [animal.animalName, animal])).values()
+    );
+  }, [ownedAnimals]);
+
   const filteredTasks = tasks.filter((task) => {
     if (taskFilter === 'done') return task.status === 'done';
-    if (taskFilter === 'not-done') return task.status !== 'done'; // ครอบคลุมทั้ง 'todo' และ 'doing'
-    return true; // 'all'
+    if (taskFilter === 'not-done') return task.status !== 'done';
+    return true;
   });
 
   const updateRoomScale = useCallback(() => {
@@ -106,13 +113,13 @@ export default function Home() {
           <div className="room" ref={roomRef}>
             <div className="room-world" ref={worldRef}>
               <img src="/images/room.svg" className="room-background" />
-              {ownedAnimals.map((animal) => {
+              {displayedAnimals.map((animal) => {
                 const layout = ANIMAL_LAYOUT[animal.animalName];
 
                 if (!layout) return null;
 
                 return (
-                  <div className={layout.className} key={animal.id}>
+                  <div className={layout.className} key={animal.animalName}>
                     {layout.shadow && (
                       <div className={layout.shadow}></div>
                     )}

@@ -31,18 +31,56 @@ export default function TaskListSection({
   categories, tasks, expandedCategories, onToggleCategory,
   onToggleTask, onEditTask, onDeleteTask, onTaskClick, compact = false,  selectedTaskId = null
 }: TaskListSectionProps) {
-  const renderTaskItem = (task: Task) => {
+const renderTaskItem = (task: Task) => {
     const isSelected = task.id === selectedTaskId;
+
+    // ดึงข้อมูล progress แยก Task
+    let progressPercent = null;
+    const savedTasksStr = sessionStorage.getItem('pomonest_saved_tasks');
+    if (savedTasksStr) {
+      try {
+        const savedTasks = JSON.parse(savedTasksStr);
+        // เช็คว่ามีข้อมูลของ Task ID นี้หรือไม่
+        if (savedTasks[task.id] && savedTasks[task.id].targetSeconds) {
+          progressPercent = Math.floor((savedTasks[task.id].elapsed / savedTasks[task.id].targetSeconds) * 100);
+        }
+      } catch (e) {}
+    }
 
     if (compact) {
       return (
         <div
           key={task.id}
           className={`task-item task-item-compact ${isSelected ? 'selected' : ''}`}
-          style={{ cursor: onTaskClick ? 'pointer' : 'default' }}
-          onClick={() => onTaskClick?.(task)}
+          style={{ 
+            cursor: 'pointer',
+            padding: '12px 15px',
+            borderRadius: '25px',
+            border: `2px solid ${isSelected ? '#819163' : '#d7e4c2'}`,
+            backgroundColor: isSelected ? '#d8f3a7' : '#ffffff7c',
+            position: 'relative',
+            zIndex: 50,
+            boxSizing: 'border-box', 
+            width: '98%',
+            margin: '0 auto 8px auto'
+          }}
+          onClick={(e) => { 
+            e.preventDefault();
+            e.stopPropagation(); 
+            if (onTaskClick) onTaskClick(task); 
+          }}
         >
-          <span className="task-text">{task.title}</span>
+          {/* แสดงเปอร์เซ็นต์ task หน้า Select Focus */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="task-text" style={{ color: isSelected ? '#4a3320' : 'inherit', fontWeight: isSelected ? 'bold' : 'normal' }}>
+              {task.title}
+            </span>
+            {progressPercent !== null && progressPercent > 0 && (
+              <span style={{ fontSize: '13px', color: '#4a3320', marginTop: '4px' }}>
+                progressing {progressPercent}%
+              </span>
+            )}
+          </div>
         </div>
       );
     }
@@ -50,9 +88,9 @@ export default function TaskListSection({
     return (
       <div
         key={task.id}
-        className="task-item"
-        style={{ cursor: isTaskCompleted(task) || onTaskClick ? 'pointer' : 'default' }}
-        onClick={() => onTaskClick?.(task)}
+        className={`task-item ${isSelected ? 'selected-task' : ''}`} 
+        style={{ cursor: onTaskClick ? 'pointer' : (isTaskCompleted(task) ? 'pointer' : 'default') }}
+        onClick={() => onTaskClick?.(task)} 
       >
         <div className="task-left">
           <div
@@ -63,6 +101,14 @@ export default function TaskListSection({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <span className={`task-text ${isTaskCompleted(task) ? 'completed' : ''}`}>{task.title}</span>
+            
+            {/* แสดงเปอร์เซ็นต์ task หน้า Home */}
+            {progressPercent !== null && progressPercent > 0 && !isTaskCompleted(task) && (
+              <span style={{ fontSize: '13px', color: '#4a3320', fontWeight: '500' }}>
+                progressing {progressPercent}%
+              </span>
+            )}
+
             <span className='task-text' style={{ fontWeight: '200', color: '#c7b9adff', fontSize: '12px' }}>
               {formatDueDate(task.dueDate)}
             </span>
@@ -70,12 +116,23 @@ export default function TaskListSection({
         </div>
         <div className="task-actions">
           {onEditTask && (
-            <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onEditTask(task); }}>
+            <button className="icon-btn" onClick={(e) => { 
+              e.preventDefault(); 
+              e.stopPropagation(); 
+              onEditTask(task); 
+            }}>
               <FontAwesomeIcon icon={faPenToSquare} />
             </button>
           )}
+          
           {onDeleteTask && (
-            <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}>
+            <button className="icon-btn" onClick={(e) => { 
+              e.preventDefault(); 
+              e.stopPropagation(); 
+              if(window.confirm('Are you sure you want to delete this task?')) {
+                onDeleteTask(task.id); 
+              }
+            }}>
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
           )}
