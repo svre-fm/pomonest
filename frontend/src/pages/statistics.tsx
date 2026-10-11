@@ -35,7 +35,7 @@ export default function Statistics() {
         // แนบ Token ไปกับ Headers
         const res = await fetch(`/api/statistics?mode=${viewMode}&date=${selectedDate}`, {
           method: 'GET',
-          cache: 'no-store', // 🌟 เพิ่มบรรทัดนี้: บังคับไม่ให้เบราว์เซอร์จำข้อมูลเก่า
+          cache: 'no-store', // บังคับไม่ให้เบราว์เซอร์จำข้อมูลเก่า
           headers: {
             'Authorization': `Bearer ${token}`
           }

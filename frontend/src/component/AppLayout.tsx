@@ -32,9 +32,10 @@ export default function AppLayout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
 
-    // ล้างข้อมูล Focus ที่ค้างอยู่ตอนกด Log out
+    // ล้างข้อมูล Focus และเพลงที่ค้างอยู่ตอนกด Log out
     sessionStorage.removeItem('pomonest_focus_progress');
     sessionStorage.removeItem('pomonest_active_status');
+    sessionStorage.removeItem('pomonest_music_state');
 
     window.location.href = '/login';
   };
