@@ -16,6 +16,7 @@ import CreateTodo from './pages/createtodo';
 import AppLayout from './component/AppLayout';
 import Collection from './pages/collection';
 import Focus from './pages/Focus';
+import Statistics from './pages/statistics';
 
 //admin
 import AdminLayout from './component/AdminLayout';
@@ -110,7 +111,7 @@ function App() {
         {/* Reset password */}
         <Route path="/reset" element={<Reset />} />
 
-        {/* ทุก route ข้างในนี้ มี sidebar ครอบด้วย AppLayout */}
+        {/* ทุก route มี sidebar ครอบด้วย AppLayout */}
         <Route
           element={isLoggedIn ? <AppLayout /> : <Navigate to="/login" replace />}
         >
@@ -120,6 +121,7 @@ function App() {
           <Route path="/create-todo/:taskId" element={<CreateTodo />} />
           <Route path="/selectFocus" element={<SelectFocus />} />
           <Route path="/collection" element={<Collection />} />
+          <Route path="/statistics" element={<Statistics />} />
         </Route>
 
         <Route

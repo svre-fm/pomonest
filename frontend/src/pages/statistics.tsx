@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import '../statistics.css';
 
 type ViewMode = 'week' | 'month' | 'year'; 
@@ -19,122 +19,78 @@ const getHeatmapLevel = (minutes: number) => {
 export default function Statistics() {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedDate, setSelectedDate] = useState<string>('Today');
+  
+  // State สำหรับเก็บข้อมูลจริงจาก Backend
+  const [statsData, setStatsData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // --- 1. Mock Data สำหรับ Heatmap ---
-  const heatmapData = useMemo<HeatmapData[]>(() => {
-    if (viewMode === 'week') {
-      return [
-        { label: 'Mon', minutes: 45 }, { label: 'Tue', minutes: 130 },
-        { label: 'Wed', minutes: 190 }, { label: 'Thu', minutes: 73 }, 
-        { label: 'Fri', minutes: 0 }, { label: 'Sat', minutes: 210 }, // ลองกดวันศุกร์ (Fri) จะเห็นว่าไม่มีกราฟโชว์
-        { label: 'Sun', minutes: 30 }
-      ];
-    }
-    if (viewMode === 'month') {
-      return Array.from({ length: 30 }, (_, i) => ({
-        label: `${i + 1}`,
-        minutes: (i * 27 + 15) % 220 
-      }));
-    }
-    if (viewMode === 'year') {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return months.map((m, i) => ({ 
-        label: m, 
-        minutes: (i * 123 + 45) % 600 
-      }));
-    }
-    return [];
-  }, [viewMode]); 
+  // ดึงข้อมูลเมื่อ component แสดงผล หรือ viewMode เปลี่ยน
+  useEffect(() => {
+    const fetchStats = async () => {
+      setIsLoading(true);
+      try {
+        // ดึง Token ของ User ที่ล็อกอินอยู่
+        const token = localStorage.getItem('authToken'); 
+        
+        // แนบ Token ไปกับ Headers
+        const res = await fetch(`/api/statistics?mode=${viewMode}&date=${selectedDate}`, {
+          method: 'GET',
+          cache: 'no-store', // บังคับไม่ให้เบราว์เซอร์จำข้อมูลเก่า
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to fetch stats');
+        }
 
-  // --- 2. คำนวณ Summary ด้านบน ---
-  const getDynamicSummary = () => {
-    if (selectedDate === 'Today') {
-      return {
-        title: "Today's Focus",
-        totalFocus: '2h 25m',
-        completedTasks: 4,
-        eggsHatched: 1,
-        totalMinutes: 145
-      };
-    }
-
-    const selectedItem = heatmapData.find(d => d.label === selectedDate);
-    const mins = selectedItem ? selectedItem.minutes : 0;
-    
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    const timeString = h > 0 ? `${h}h ${m}m` : `${m}m`;
-
-    return {
-      title: `Stats for ${selectedDate}`,
-      totalFocus: mins > 0 ? timeString : '0m', 
-      completedTasks: Math.floor(mins / 30), 
-      eggsHatched: Math.floor(mins / 60),
-      totalMinutes: mins
+        const data = await res.json();
+        setStatsData(data);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchStats();
+  }, [viewMode, selectedDate]);
+
+  // หน้าจอระหว่างรอโหลดข้อมูล
+  if (isLoading || !statsData) {
+    return (
+      <div className="statistics-view">
+        <div className="stats-header">
+          <h2>Statistics</h2>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <p>Loading statistics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ดึงข้อมูลจริงจาก State มาใช้
+  const heatmapData = statsData.heatmap || [];
+  const summary = statsData.summary || { 
+    title: `Stats for ${selectedDate}`, 
+    totalFocus: '0m', 
+    completedTasks: 0, 
+    eggsHatched: 0, 
+    totalMinutes: 0 
   };
+  const categories = statsData.categories || [];
 
-  const summary = getDynamicSummary();
-
-  // --- 3. 🌟 จำลองการกระจายหมวดหมู่แบบสมจริง (ไม่มีการ Hardcode 0%) ---
-  const getDynamicCategories = () => {
-    // 3.1 กรณีวันนั้นไม่ได้โฟกัสเลย (0 นาที) ให้โชว์หมวดหมู่ = 0 อย่างเป็นธรรมชาติ
-    if (summary.totalMinutes === 0) {
-      return [];
-    }
-
-    // หมวดหมู่ทั้งหมดที่มีในระบบ
-    const allCategories = [
-      { name: 'General', color: '#8884d8' },
-      { name: 'Database', color: '#ffc658' },
-      { name: 'AI', color: '#82ca9d' }
-    ];
-
-    // กรณีเลือก Today ให้โชว์ 2 หมวดหมู่แบบสวยๆ
-    if (selectedDate === 'Today') {
-      return [
-        { ...allCategories[0], percent: 65 },
-        { ...allCategories[1], percent: 35 }
-      ];
-    }
-
-    // 3.2 สุ่มจำนวนหมวดหมู่ที่ทำในวันนั้น (ได้ 1, 2 หรือ 3 หมวดหมู่ อิงจากความยาวชื่อวัน)
-    const categoryCount = (selectedDate.charCodeAt(0) + selectedDate.length) % 3 + 1;
-
-    // สร้างข้อมูลกราฟตามจำนวนหมวดหมู่ที่สุ่มได้ (เปอร์เซ็นต์รวมกัน = 100%)
-    if (categoryCount === 1) {
-      // ทำแค่ 1 อย่างทั้งวัน (100%)
-      return [
-        { ...allCategories[0], percent: 100 }
-      ];
-    } else if (categoryCount === 2) {
-      // ทำ 2 อย่าง (60% กับ 40%)
-      return [
-        { ...allCategories[0], percent: 60 },
-        { ...allCategories[1], percent: 40 }
-      ];
-    } else {
-      // ทำครบ 3 อย่าง (45%, 35%, 20%)
-      return [
-        { ...allCategories[0], percent: 45 },
-        { ...allCategories[1], percent: 35 },
-        { ...allCategories[2], percent: 20 }
-      ];
-    }
-  };
-
-  const categories = getDynamicCategories();
-
-  // วาดกราฟวงกลม (ถ้าไม่มีหมวดหมู่เลย ให้แสดงเป็นวงแหวนสีเทา)
+  // วาดสถิติกราฟวงกลม
   let currentAngle = 0;
   const conicGradientString = categories.length > 0 
-    ? categories.map(cat => {
+    ? categories.map((cat: any) => {
         const start = currentAngle;
         const end = currentAngle + (cat.percent * 3.6); 
         currentAngle = end;
         return `${cat.color} ${start}deg ${end}deg`;
       }).join(', ')
-    : '#ebf0e6 0deg 360deg'; // วงแหวนสีเทากรณีว่างเปล่า (0 นาที)
+    : '#ebf0e6 0deg 360deg'; 
 
   return (
     <div className="statistics-view">
@@ -157,7 +113,7 @@ export default function Statistics() {
         </div>
       </div>
 
-      <h3 style={{ margin: '0 0 15px 0', color: '#4a3320' }}>
+      <h3 style={{ margin: '0 0 15px 0', color: '#4a3320', fontSize: '18px' }}>
         {summary.title}
       </h3>
 
@@ -179,13 +135,12 @@ export default function Statistics() {
       <div className="charts-container">
         
         <div className="chart-card" style={{ flex: 1.5 }}>
-          <h3 className="chart-title">Focus Heatmap ({viewMode})</h3>
+          <h3 className="chart-title">Category Heatmap ({viewMode})</h3>
           <div className={`heatmap-grid ${viewMode}`}>
-            {heatmapData.map((data, index) => (
+            {heatmapData.map((data: HeatmapData, index: number) => (
               <div 
                 key={index} 
-                className={`heatmap-item ${getHeatmapLevel(data.minutes)} ${selectedDate === data.label ? 'selected' : ''}`}
-                onClick={() => setSelectedDate(data.label)}
+                className={`heatmap-item ${getHeatmapLevel(data.minutes)}`}
               >
                 <span className="heatmap-label">{data.label}</span>
                 <span className="heatmap-value">{data.minutes}m</span>
@@ -203,7 +158,7 @@ export default function Statistics() {
             
             <div className="donut-legend">
               {categories.length > 0 ? (
-                categories.map((cat, idx) => (
+                categories.map((cat: any, idx: number) => (
                   <div key={idx} className="legend-item">
                     <div className="legend-color" style={{ backgroundColor: cat.color }}></div>
                     <span>{cat.name}</span>
@@ -216,9 +171,7 @@ export default function Statistics() {
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
