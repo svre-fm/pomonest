@@ -145,10 +145,23 @@ adminUsersRouter.get("/:id", async (req: Request, res: Response) => {
     }
 
     // ดึงสถิติต่างๆ ของผู้ใช้
-    const [[sessionCount], [animalCount], [eggCount]] = await Promise.all([
-      dbClient.select({ count: count() }).from(focusSessions).where(eq(focusSessions.userId, userId)),
+    const [[sessionStats], [animalCount], [eggStats]] = await Promise.all([
+      dbClient
+        .select({
+          total: count(),
+          completed: sql<number>`(count(*) filter (where ${focusSessions.status} = 'completed'))::int`,
+          focusSeconds: sql<number>`(coalesce(sum(${focusSessions.duration}) filter (where ${focusSessions.status} = 'completed'), 0))::int`,
+        })
+        .from(focusSessions)
+        .where(eq(focusSessions.userId, userId)),
       dbClient.select({ count: count() }).from(userAnimals).where(eq(userAnimals.userId, userId)),
-      dbClient.select({ count: count() }).from(userEggs).where(eq(userEggs.userId, userId)),
+      dbClient
+        .select({
+          total: count(),
+          hatched: sql<number>`(count(*) filter (where ${userEggs.status} = 'hatched'))::int`,
+        })
+        .from(userEggs)
+        .where(eq(userEggs.userId, userId)),
     ]);
 
     res.status(200).json({
@@ -156,9 +169,13 @@ adminUsersRouter.get("/:id", async (req: Request, res: Response) => {
       data: {
         ...user,
         stats: {
-          totalSessions: Number(sessionCount?.count ?? 0),
+          totalSessions: Number(sessionStats?.total ?? 0),
+          completedSessions: sessionStats?.completed ?? 0,
+          cancelledSessions: Number(sessionStats?.total ?? 0) - (sessionStats?.completed ?? 0),
+          focusSeconds: sessionStats?.focusSeconds ?? 0, 
           totalAnimals: Number(animalCount?.count ?? 0),
-          totalEggs: Number(eggCount?.count ?? 0),
+          totalEggs: Number(eggStats?.total ?? 0),
+          hatchedEggs: eggStats?.hatched ?? 0,
         },
       },
     });

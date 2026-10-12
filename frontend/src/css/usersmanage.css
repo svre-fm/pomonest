@@ -108,3 +108,162 @@
   transform: none;
 }
 
+.select-filter.active {
+  background-color: #fff3d6;
+  border-color: #ffc773;
+  color: #7a593f;
+}
+
+.dropdown-filter.filtered {
+  background-color: #fff3d6;
+  border-color: #ffc773;
+}
+
+.dropdown-item.selected {
+  font-weight: 700;
+}
+
+.card-number {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.card-note {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #8c735e;
+}
+
+.delta {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delta-good {
+  color: #6f9a3a;
+}
+
+.delta-bad {
+  color: #da6652;
+}
+
+.delta-flat {
+  color: #8c735e;
+  font-weight: 400;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-disabled {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #fdeceb;
+  color: #a1352a;
+}
+
+.role-badge {
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #f1ebe0;
+  color: #7a593f;
+}
+
+.role-badge.admin {
+  background: #ded65a;
+  color: #5c4a12;
+}
+
+.user-metric {
+  font-size: 12px;
+  color: #8c735e;
+}
+
+.users-error {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  background: #fdeceb;
+  color: #a1352a;
+  border: 1px solid #f2c4bf;
+}
+
+.users-notice {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  background: #f1f6e4;
+  color: #4d6a1f;
+  border: 1px solid #d3e2ab;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8c735e;
+}
+
+.pager-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pager-buttons button {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid #e5d5b8;
+  background: #ffffff;
+  color: #7a593f;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.pager-buttons button:active {
+  transform: none;
+}
+
+.pager-buttons button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.icon.faCircleCheck {
+  color: #a3bd5b;
+}
+
+.icon.faCircleCheck:hover {
+  color: rgba(163, 189, 91, 0.45);
+}
+
+.profile-name{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+.userProfile{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+
+}

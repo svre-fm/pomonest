@@ -117,7 +117,8 @@ export default function AnimalDetail({ onClose }: Animalprop) {
             </div>
 
             <div className="egg-form-group">
-              <label htmlFor="animal-rarity">Rarity</label>
+              {/* แก้ไขเป็น dropdown ของ ไข่  */}
+              <label htmlFor="animal-rarity">select egg</label>
               <input
                 id="animal-rarity"
                 type="text"

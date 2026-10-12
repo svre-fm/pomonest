@@ -87,8 +87,7 @@ export default function Usersmanage() {
 
                     {isopenroleDropdown && (
                     <div className="dropdown">
-                        <button className="dropdown-item">Admin</button>
-                        <button className="dropdown-item">User</button>
+                        <button className="dropdown-item">rarity</button>
                     </div>
                     )}
                 </div>
