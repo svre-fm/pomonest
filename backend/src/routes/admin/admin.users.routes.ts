@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { and, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
 import {
   users,
@@ -16,31 +16,46 @@ import { runAsAdmin, logAdminAction } from "../../utils/adminHelpers.js";
 
 const adminUsersRouter = Router();
 
+// สถิติรายผู้ใช้ (เขียนชื่อตารางเต็มเอง ไม่ใช้ ${column} เพราะ Drizzle ตัดชื่อตารางออกใน select ตารางเดียว
+// ทำให้ subquery เทียบผิดคอลัมน์)
+const focusSecondsExpr = sql<number>`(select coalesce(sum(fs.duration), 0)::int from focus_sessions fs where fs.user_id = users.id and fs.status = 'completed')`;
+const eggsHatchedExpr = sql<number>`(select count(*)::int from user_eggs ue where ue.user_id = users.id and ue.status = 'hatched')`;
+const animalCountExpr = sql<number>`(select count(*)::int from user_animals ua where ua.user_id = users.id)`;
+
+const USER_SORTS = ["recent", "oldest", "focus", "eggs", "animals"] as const;
+
 // ==========================================
 // GET /api/admin/users - ดึงรายชื่อผู้ใช้ทั้งหมด
 // รองรับ ?search= (username/email), ?role=, ?page=, ?limit=
 // ==========================================
 adminUsersRouter.get("/", async (req: Request, res: Response) => {
   try {
-      const { search, role, status, page = "1", limit = "20" } = req.query;
+    const { search, role, status, sort, page = "1", limit = "20" } = req.query;
 
     const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(String(limit), 10) || 20));
     const offset = (pageNum - 1) * limitNum;
 
+    if (sort !== undefined && !(USER_SORTS as readonly string[]).includes(String(sort))) {
+      return res.status(400).json({ error: `sort must be one of: ${USER_SORTS.join(", ")}` });
+    }
+
     const conditions = [];
 
     if (search && typeof search === "string" && search.trim()) {
-      const term = `%${search.trim()}%`;
+      // escape ตัวอักษรพิเศษของ LIKE เพื่อให้ค้นหาตามตัวอักษรจริง (เช่น พิมพ์ % จะไม่กลายเป็นตรงกับทุกคน)
+      const term = `%${search.trim().replace(/[\\%_]/g, "\\$&")}%`;
       conditions.push(or(ilike(users.username, term), ilike(users.email, term)));
     }
 
     if (role && (role === "user" || role === "admin")) {
       conditions.push(eq(users.role, role));
     }
-  
+
     if (status === "active") conditions.push(eq(users.isActive, true));
     if (status === "disabled") conditions.push(eq(users.isActive, false));
+    if (status === "verified") conditions.push(eq(users.emailVerified, true));
+    if (status === "unverified") conditions.push(eq(users.emailVerified, false));
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -51,20 +66,35 @@ adminUsersRouter.get("/", async (req: Request, res: Response) => {
 
     const total = totalResult ? Number(totalResult.count) : 0;
 
+    const sortKey = typeof sort === "string" ? sort : "recent";
+    const orderBy =
+      sortKey === "oldest"
+        ? [asc(users.createdAt)]
+        : sortKey === "focus"
+          ? [desc(focusSecondsExpr), desc(users.createdAt)]
+          : sortKey === "eggs"
+            ? [desc(eggsHatchedExpr), desc(users.createdAt)]
+            : sortKey === "animals"
+              ? [desc(animalCountExpr), desc(users.createdAt)]
+              : [desc(users.createdAt)];
+
     const allUsers = await dbClient
       .select({
         id: users.id,
-        profile: users.avatar,
         username: users.username,
         email: users.email,
         avatar: users.avatar,
         role: users.role,
+        isActive: users.isActive,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
+        focusSeconds: focusSecondsExpr,
+        eggsHatched: eggsHatchedExpr,
+        animalCount: animalCountExpr,
       })
       .from(users)
       .where(whereClause)
-      .orderBy(desc(users.createdAt))
+      .orderBy(...orderBy, asc(users.id)) // asc(users.id) ท้ายสุดทำให้ลำดับคงที่เมื่อค่าเท่ากัน (แบ่งหน้าไม่ซ้ำ/ไม่ตก)
       .limit(limitNum)
       .offset(offset);
 

@@ -20,7 +20,7 @@ type Stats = {
 
 type RecentUser = {
   id: string;
-  profile:string;
+  avatar:string;
   username: string;
   email: string;
   emailVerified: boolean;
@@ -64,6 +64,7 @@ function UserDonut({ verified, notVerified }: { verified: number; notVerified: n
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const verifiedLength = total > 0 ? (verified / total) * circumference : 0;
+ 
 
   return (
     <svg
@@ -96,6 +97,7 @@ export default function Overview() {
   const [activity, setActivity] = useState<Stats['activity'] | null>(null);
   const [recentUsers, setRecentUsers] = useState<RecentUser[] | null>(null);
   const [error, setError] = useState('');
+  const [changeFilter,setchangeFilter] = useState(false);
 
   // การ์ดด้านบน + Total Users + ตารางผู้ใช้ล่าสุด (ยอดรวมทั้งหมด ไม่ขึ้นกับตัวกรองของกราฟ)
   useEffect(() => {
@@ -198,12 +200,12 @@ export default function Overview() {
           <h3><b>Focus Activity Chart</b></h3>
           <div className="wrapper">
             <button
-              className={`dropdown-filter ${isopenDropdown ? 'active' : ''}`}
+              className={`dropdown-filter ${isopenDropdown ? 'active' : ''} ${changeFilter ? 'change' : ''}`}
               onClick={() => setIsopenDropdown(!isopenDropdown)}
               aria-haspopup="true"
               aria-expanded={isopenDropdown}
             >
-              Filter
+              <span>{changeFilter ? range : 'Filter'}</span>
               <FontAwesomeIcon
                 icon={isopenDropdown ? faAngleRight : faAngleDown}
                 style={{ fontSize: '12px', margin: '7px 0px 0px 10px' }}
@@ -219,6 +221,7 @@ export default function Overview() {
                     onClick={() => {
                       setRange(r.value);
                       setIsopenDropdown(false);
+                      setchangeFilter(true);
                     }}
                   >
                     {r.label}
@@ -273,7 +276,7 @@ export default function Overview() {
               return (
                 <tr className='row' key={user.id}>
                     <td className='group-user'>
-                        <img className='userProfile' src={user.profile} />
+                        <img className='userProfile' src={user.avatar} />
                         {user.username}
                     </td>
                     <td>{user.email}</td>

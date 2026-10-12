@@ -119,6 +119,12 @@ tr.row td:last-child {
   border-radius: 10px 10px 0 0;
 }
 
+.dropdown-filter.change {
+  background-color: #def198;
+  border-color: #dfebb5;
+  color: #684020;
+}
+
 .dropdown {
   position: absolute;
   top: calc(100%);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faImage } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import '../css/eggdetail.css';
@@ -16,18 +16,16 @@ export default function EggDetail({ onClose }: Eggprop) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Clear the form without closing the window
-  const handleCancel = () => {
-    setName('');
-    setImagePreview(null);
-    setImageFile(null);
+  // Release the previous preview URL
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  // Handle image selection and preview
+  // Select an image
   const handleImageChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -39,16 +37,18 @@ export default function EggDetail({ onClose }: Eggprop) {
     }
   };
 
-  // Release the previous preview URL to avoid memory leaks
-  useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-      }
-    };
-  }, [imagePreview]);
+  // Clear the form without closing the window
+  const handleCancel = () => {
+    setName('');
+    setImagePreview(null);
+    setImageFile(null);
 
-  // Handle form submission
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Submit form
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -71,7 +71,7 @@ export default function EggDetail({ onClose }: Eggprop) {
 
   return (
     <div className="bg">
-      <div className="detail-contiener">
+      <div className="detailegg-contiener">
         <button
           type="button"
           className="close"
@@ -82,7 +82,8 @@ export default function EggDetail({ onClose }: Eggprop) {
         </button>
 
         <form onSubmit={handleSubmit}>
-          <div className="egg-form-group">
+          {/* Row 1: Egg name */}
+          <div className="egg-form-group egg-name-row">
             <label htmlFor="egg-name">Name</label>
             <input
               id="egg-name"
@@ -94,25 +95,42 @@ export default function EggDetail({ onClose }: Eggprop) {
             />
           </div>
 
-          <div className="egg-form-group">
-            <label htmlFor="egg-image">Image</label>
-            <input
-              ref={fileInputRef}
-              id="egg-image"
-              type="file"
-              accept="image/png, image/jpeg"
-              onChange={handleImageChange}
-              required
-            />
+          {/* Row 2: Clickable image */}
+          <div className="egg-images-row">
+            <div className="egg-image-field">
+              <label htmlFor="egg-image">Image</label>
+
+              <input
+                ref={fileInputRef}
+                id="egg-image"
+                className="egg-file-input"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={handleImageChange}
+              />
+
+              <label
+                htmlFor="egg-image"
+                className="egg-image-clickable"
+                title="Click to select or change image"
+              >
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Egg preview" />
+                ) : (
+                  <div className="egg-image-placeholder">
+                    <FontAwesomeIcon icon={faImage} />
+                    <span>Choose image</span>
+                  </div>
+                )}
+              </label>
+
+              <p className="egg-image-name">
+                {imageFile?.name || 'No image selected'}
+              </p>
+            </div>
           </div>
 
-          {imagePreview && (
-            <div className="egg-image-preview">
-              <p>Image Preview</p>
-              <img src={imagePreview} alt="Egg preview" />
-            </div>
-          )}
-
+          {/* Actions */}
           <div className="egg-form-actions">
             <button
               type="button"

@@ -107,3 +107,9 @@
     right: 10px;
 }
 
+.select-filter.active{
+    background-color: #ffc773;
+    border-color: #ffc773;
+    color: #4a3320;
+}
+

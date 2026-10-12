@@ -94,7 +94,7 @@ export default function Usersmanage() {
                 </div>
           </div>
         )}
-        <button className='add'>add</button>
+        <button className='add' onClick={() => setIsedit(true)}>add</button>
       </div>
       
 

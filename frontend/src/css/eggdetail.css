@@ -1,4 +1,24 @@
-.detail-contiener form {
+.detailegg-contiener{
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    align-items: center;
+    gap: 10px;
+    width:50%;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: #fff;
+    max-width: 600px;
+    padding: 20px 20px;
+    border-radius: 12px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px #00000065;
+}
+
+.detailegg-contiener form {
   width: 100%;
   box-sizing: border-box;
 }
@@ -100,6 +120,34 @@
 }
 
 .cancel-btn-egg:active{
+    box-shadow: 0px 0px 0 #a55e51;
+}
+
+.close{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: -18px;
+    right: -10px;
+
+    width: 40px;
+    height: 40px;
+    border: 2px solid #903f39;
+    background: #de6e5a;
+    box-shadow: 0px 6px 0 #a55e51; 
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 25px;
+    font-weight:bolder;
+}
+
+.close:hover{
+    background: #f39686;
+}
+
+.close:active{
     box-shadow: 0px 0px 0 #a55e51;
 }
 

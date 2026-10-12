@@ -91,7 +91,7 @@ export default function AnimalDetail({ onClose }: Animalprop) {
 
   return (
     <div className="bg">
-      <div className="detail-contiener animal-detail">
+      <div className="detailegg-contiener">
         <button
           type="button"
           className="close"

@@ -177,6 +177,88 @@ adminDashboardRouter.get("/stats", async (req: Request, res: Response) => {
   }
 });
 
+// ช่วงเวลาปัจจุบัน/ก่อนหน้า (ยาวเท่ากัน) สำหรับเทียบขึ้น-ลง  (curStart ตรงกับ statsSince ของ planRange)
+function comparisonWindows(range: Range, now: number) {
+  if (range === "all") return null;
+  if (range === "week" || range === "month") {
+    const days = range === "week" ? 7 : 30;
+    const curStart = new Date(`${bangkokDay(now - (days - 1) * DAY_MS)}T00:00:00${TZ_OFFSET}`);
+    return { curStart, prevStart: new Date(curStart.getTime() - days * DAY_MS) };
+  }
+  const currentMonth = bangkokDay(now).slice(0, 7);
+  return {
+    curStart: new Date(`${monthsBack(currentMonth, 11)}-01T00:00:00${TZ_OFFSET}`),
+    prevStart: new Date(`${monthsBack(currentMonth, 23)}-01T00:00:00${TZ_OFFSET}`),
+  };
+}
+
+// ==========================================
+// GET /api/admin/user-stats?range=all|week|month|year (ค่าเริ่มต้น all)  ใช้กับการ์ดหน้า User Management
+//  total    = ผู้ใช้ทั้งหมดตอนนี้
+//  active   = ผู้ใช้ที่มี focus session (สถานะใดก็ได้) เริ่มในช่วงนั้น (all = เคยมี session)
+//  inactive = total - active
+//  disabled = บัญชีที่ถูกระงับตอนนี้
+//  previous = ค่า ณ ช่วงก่อนหน้าที่ยาวเท่ากัน (null เมื่อ range=all) ไว้เทียบเพิ่มขึ้น/ลดลง
+//             previous.total = ผู้ใช้ที่สมัครก่อนช่วงปัจจุบันเริ่ม
+// ==========================================
+adminDashboardRouter.get("/user-stats", async (req: Request, res: Response) => {
+  const rangeParam = req.query.range === undefined ? "all" : req.query.range;
+  if (rangeParam !== "all" && rangeParam !== "week" && rangeParam !== "month" && rangeParam !== "year") {
+    return res.status(400).json({ error: "range must be one of: all, week, month, year" });
+  }
+  const range: Range = rangeParam;
+
+  try {
+    const win = comparisonWindows(range, Date.now());
+    const curIso = win ? win.curStart.toISOString() : null;
+    const prevIso = win ? win.prevStart.toISOString() : null;
+
+    const [[userRow], [sessionRow]] = await Promise.all([
+      dbClient
+        .select({
+          total: count(),
+          disabled: sql<number>`(count(*) filter (where not ${users.isActive}))::int`,
+          beforeWindow: curIso
+            ? sql<number>`(count(*) filter (where ${users.createdAt} < ${curIso}::timestamptz))::int`
+            : sql<number>`0`,
+        })
+        .from(users),
+      dbClient
+        .select({
+          activeNow: curIso
+            ? sql<number>`(count(distinct ${focusSessions.userId}) filter (where ${focusSessions.startTime} >= ${curIso}::timestamptz))::int`
+            : sql<number>`(count(distinct ${focusSessions.userId}))::int`,
+          activePrev:
+            curIso && prevIso
+              ? sql<number>`(count(distinct ${focusSessions.userId}) filter (where ${focusSessions.startTime} >= ${prevIso}::timestamptz and ${focusSessions.startTime} < ${curIso}::timestamptz))::int`
+              : sql<number>`0`,
+        })
+        .from(focusSessions),
+    ]);
+
+    const total = userRow.total;
+    const active = Math.min(sessionRow.activeNow, total);
+
+    res.status(200).json({
+      message: "User stats fetched successfully",
+      data: {
+        range,
+        current: { total, active, inactive: total - active, disabled: userRow.disabled },
+        previous: win
+          ? {
+              total: userRow.beforeWindow,
+              active: Math.min(sessionRow.activePrev, userRow.beforeWindow),
+              inactive: Math.max(0, userRow.beforeWindow - sessionRow.activePrev),
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching admin user stats:", error);
+    res.status(500).json({ error: "Failed to fetch user stats" });
+  }
+});
+
 // ==========================================
 // GET /api/admin/logs - บันทึกการกระทำของ admin ล่าสุด  ?limit=20 (สูงสุด 100)
 // ==========================================
