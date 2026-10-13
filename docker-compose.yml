@@ -37,6 +37,8 @@ services:
       - ${BACKEND_PORT}:3001
 
     environment:
+      - PORT=3001
+      - BACKEND_PORT=3001
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=postgres
@@ -56,6 +58,7 @@ services:
 
     volumes:
       - ./logs:/app/logs
+      - ./frontend/public/images:/app/frontend/public/images
 
     networks:
       - pomo-net

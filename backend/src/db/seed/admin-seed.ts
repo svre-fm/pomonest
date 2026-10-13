@@ -28,6 +28,7 @@ async function seedAdmin() {
     await dbClient
       .update(users)
       .set({
+        avatar: "profile1.png",
         role: "admin",
         isActive: true,
         emailVerified: true,
@@ -45,6 +46,7 @@ async function seedAdmin() {
     password: await hashPassword(password),
     emailVerified: true,
     role: "admin",
+    avatar: "profile1.png",
   });
   console.log(`Admin user ${email} created.`);
 }

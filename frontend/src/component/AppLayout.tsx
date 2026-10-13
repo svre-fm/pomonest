@@ -11,6 +11,39 @@ export default function AppLayout() {
 
   const [user, setUser] = useState<{ email: string; username: string; avatar?: string } | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+
+  // Only admins can have test mode; ask the backend (it is the source of truth)
+  useEffect(() => {
+    let role: string | undefined;
+    try {
+      role = JSON.parse(localStorage.getItem('authUser') || '{}').role;
+    } catch {
+      role = undefined;
+    }
+    if (role !== 'admin') return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    fetch('/api/admin/test/mode', { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setTestMode(Boolean(body?.data?.enabled)))
+      .catch(() => setTestMode(false));
+  }, []);
+
+  const exitTestMode = async () => {
+    const token = localStorage.getItem('authToken');
+    try {
+      await fetch('/api/admin/test/mode', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ enabled: false }),
+      });
+    } finally {
+      // reload so every page refetches what a normal user would see
+      window.location.href = '/admin/data';
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -131,6 +164,17 @@ export default function AppLayout() {
       </div>
 
       <div className="main-content">
+        {testMode && (
+          <div className="test-mode-banner" role="status">
+            <span>Test mode: you can see unreleased eggs and animals. Progress is saved to your admin account.</span>
+            <button type="button" onClick={() => navigate('/admin/data')}>
+              Back to admin
+            </button>
+            <button type="button" onClick={exitTestMode}>
+              Exit test mode
+            </button>
+          </div>
+        )}
         <Outlet /> {/* Render Home, Focus, CreateTodo, Collection here */}
       </div>
     </div>

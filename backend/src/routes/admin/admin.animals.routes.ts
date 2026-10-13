@@ -2,15 +2,29 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { and, eq, ilike } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
-import { animals, eggRewards, userAnimals, eggs } from "@db/schema.js";
+import { animals, eggRewards, userAnimals, eggs, rarities } from "@db/schema.js";
 
 const adminAnimalsRouter = Router();
 
-const VALID_RARITIES = ["common", "rare", "epic"] as const;
+// rarity ที่ใช้ได้ดูจากตาราง rarities (แอดมินเพิ่มเองได้) ไม่ได้ fix ไว้ในโค้ด
+async function resolveRarity(value: unknown): Promise<string | null> {
+  if (typeof value !== "string") return null;
+  const name = value.trim().toLowerCase();
+  if (!name) return null;
+  const [found] = await dbClient
+    .select({ name: rarities.name })
+    .from(rarities)
+    .where(eq(rarities.name, name))
+    .limit(1);
+  return found?.name ?? null;
+}
+
+const unknownRarityError = (value: unknown) =>
+  `Unknown rarity "${String(value)}". Add it in the Rarities tab first.`;
 
 // ==========================================
 // GET /api/admin/animals - ดึงรายการสัตว์ทั้งหมด
-// รองรับ ?rarity= (common, rare, epic) และ ?search=
+// รองรับ ?rarity=<ชื่อ rarity> และ ?search=
 // ==========================================
 adminAnimalsRouter.get("/", async (req: Request, res: Response) => {
   try {
@@ -18,34 +32,47 @@ adminAnimalsRouter.get("/", async (req: Request, res: Response) => {
 
     const conditions = [];
 
-    if (rarity && typeof rarity === "string" && VALID_RARITIES.includes(rarity as any)) {
-      conditions.push(eq(animals.rarity, rarity as "common" | "rare" | "epic"));
+    if (rarity && typeof rarity === "string" && rarity.trim()) {
+      conditions.push(eq(eggs.rarity, rarity.trim().toLowerCase()));
     }
 
     if (search && typeof search === "string" && search.trim()) {
       conditions.push(ilike(animals.name, `%${search.trim()}%`));
     }
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause =
+      conditions.length > 0 ? and(...conditions) : undefined;
 
+    // ดึงข้อมูลสัตว์ พร้อมกรอง rarity และ search
     const allAnimals = await dbClient
-      .select()
+      .selectDistinct({
+        id: animals.id,
+        name: animals.name,
+        image: animals.image,
+        // เพิ่มคอลัมน์อื่นของ animals ที่ต้องการส่งกลับได้
+      })
       .from(animals)
+      .innerJoin(eggRewards, eq(eggRewards.animalId, animals.id))
+      .innerJoin(eggs, eq(eggRewards.eggId, eggs.id))
       .where(whereClause);
 
-    // ดึงข้อมูลว่าสัตว์แต่ละตัวผูกกับไข่ใบไหนบ้าง
+    // ดึงข้อมูลไข่ที่สัตว์แต่ละตัวสามารถได้รับจากไข่ได้
     const allRewards = await dbClient
       .select({
         animalId: eggRewards.animalId,
         eggId: eggs.id,
         eggName: eggs.name,
+        rarity: eggs.rarity,
         dropRate: eggRewards.dropRate,
       })
       .from(eggRewards)
       .innerJoin(eggs, eq(eggRewards.eggId, eggs.id));
 
     const animalsWithEggs = allAnimals.map((animal) => {
-      const droppedFrom = allRewards.filter((r) => r.animalId === animal.id);
+      const droppedFrom = allRewards.filter(
+        (r) => r.animalId === animal.id
+      );
+
       return {
         ...animal,
         droppedFromEggs: droppedFrom,
@@ -89,6 +116,7 @@ adminAnimalsRouter.get("/:id", async (req: Request, res: Response) => {
         rewardId: eggRewards.id,
         eggId: eggs.id,
         eggName: eggs.name,
+        eggRarity: eggs.rarity,
         dropRate: eggRewards.dropRate,
       })
       .from(eggRewards)
@@ -113,16 +141,10 @@ adminAnimalsRouter.get("/:id", async (req: Request, res: Response) => {
 // ==========================================
 adminAnimalsRouter.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, rarity = "common", image, animation } = req.body;
+    const { name, image, animation } = req.body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "Animal name is required" });
-    }
-
-    if (!VALID_RARITIES.includes(rarity)) {
-      return res.status(400).json({
-        error: `Invalid rarity. Must be one of: ${VALID_RARITIES.join(", ")}`,
-      });
     }
 
     if (!image || typeof image !== "string" || !image.trim()) {
@@ -137,7 +159,6 @@ adminAnimalsRouter.post("/", async (req: Request, res: Response) => {
       .insert(animals)
       .values({
         name: name.trim(),
-        rarity,
         image: image.trim(),
         animation: animation.trim(),
       })
@@ -174,7 +195,7 @@ adminAnimalsRouter.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Animal not found" });
     }
 
-    const { name, rarity, image, animation } = req.body;
+    const { name, image, animation } = req.body;
     const updates: Partial<typeof animals.$inferInsert> = {};
 
     if (name !== undefined) {
@@ -183,15 +204,6 @@ adminAnimalsRouter.put("/:id", async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Animal name cannot be empty" });
       }
       updates.name = trimmed;
-    }
-
-    if (rarity !== undefined) {
-      if (!VALID_RARITIES.includes(rarity)) {
-        return res.status(400).json({
-          error: `Invalid rarity. Must be one of: ${VALID_RARITIES.join(", ")}`,
-        });
-      }
-      updates.rarity = rarity;
     }
 
     if (image !== undefined) {

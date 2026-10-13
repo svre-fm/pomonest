@@ -72,3 +72,12 @@ export async function requireAdmin(
     res.status(500).json({ error: "Failed to verify admin access" });
   }
 }
+
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const payload = verifyToken(authHeader.slice(7));
+    if (payload) req.user = payload;
+  }
+  next();
+}

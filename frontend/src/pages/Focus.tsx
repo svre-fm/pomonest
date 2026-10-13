@@ -119,6 +119,22 @@ export default function FocusSession() {
 
   const [isMusicOpen, setIsMusicOpen] = useState(false);
 
+  // Test mode (admin only): lets the admin skip to the end of the timer to try the hatch flow quickly
+  const [isTestMode, setIsTestMode] = useState(false);
+  useEffect(() => {
+    let role: string | undefined;
+    try {
+      role = JSON.parse(localStorage.getItem('authUser') || '{}').role;
+    } catch {
+      role = undefined;
+    }
+    if (role !== 'admin') return;
+    authFetch('/api/admin/test/mode')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setIsTestMode(Boolean(body?.data?.enabled)))
+      .catch(() => setIsTestMode(false));
+  }, []);
+
   const [currentSongIndex, setCurrentSongIndex] = useState(() => {
     const saved = sessionStorage.getItem('pomonest_music_state');
     return saved ? JSON.parse(saved).index || 0 : 0;
@@ -437,11 +453,40 @@ export default function FocusSession() {
   }
 
   const timeLeft = Math.max(0, targetSeconds - elapsed);
+  // Jump to 5 seconds before the end; the normal completion + hatch path then runs by itself
+  const handleSkipToEnd = () => {
+    if (!userEgg || hatchStage !== 'none') return;
+    setElapsed(Math.max(0, targetSeconds - 5));
+    setRunning(true);
+  };
+
   const progressPercent = Math.min(Math.round((elapsed / targetSeconds) * 100), 100);
 
   return (
     <div className="focus-timer-view">
       <div className="timer-background"></div>
+
+      {isTestMode && hatchStage === 'none' && (
+        <button
+          type="button"
+          onClick={handleSkipToEnd}
+          style={{
+            position: 'fixed',
+            left: 16,
+            bottom: 16,
+            zIndex: 50,
+            padding: '8px 14px',
+            border: '1px dashed #8da64b',
+            borderRadius: 8,
+            background: '#fff',
+            color: '#5b6b2c',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Test: skip to last 5s
+        </button>
+      )}
 
       <div className="timer-top-bar">
         <div className="back-btn-wrapper" onClick={handleBackClick}>

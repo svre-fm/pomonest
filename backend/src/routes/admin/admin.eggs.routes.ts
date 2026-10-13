@@ -1,10 +1,21 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
 import { eggs, eggRewards, animals, userEggs } from "@db/schema.js";
 
 const adminEggsRouter = Router();
+
+// ชื่อไข่ห้ามซ้ำ (ไม่สนตัวพิมพ์เล็ก/ใหญ่) เพราะชื่อไข่ใช้บอก rarity ของสัตว์
+async function isEggNameTaken(name: string, excludeId?: number): Promise<boolean> {
+  const sameName = sql`lower(${eggs.name}) = ${name.toLowerCase()}`;
+  const [found] = await dbClient
+    .select({ id: eggs.id })
+    .from(eggs)
+    .where(excludeId === undefined ? sameName : and(sameName, ne(eggs.id, excludeId)))
+    .limit(1);
+  return !!found;
+}
 
 // ==========================================
 // GET /api/admin/eggs - ดึงรายการไข่ทั้งหมด พร้อมจำนวนรางวัลที่ผูกอยู่
@@ -64,7 +75,7 @@ adminEggsRouter.get("/:id", async (req: Request, res: Response) => {
         dropRate: eggRewards.dropRate,
         animalId: animals.id,
         animalName: animals.name,
-        animalRarity: animals.rarity,
+        animalRarity: eggs.rarity,
         animalImage: animals.image,
         animalAnimation: animals.animation,
       })
@@ -90,9 +101,13 @@ adminEggsRouter.get("/:id", async (req: Request, res: Response) => {
 // ==========================================
 adminEggsRouter.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, required, image } = req.body;
+    const { name, rarity,  required, image } = req.body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Egg name is required" });
+    }
+
+    if (!rarity || typeof rarity !== "string" || !rarity.trim()) {
       return res.status(400).json({ error: "Egg name is required" });
     }
 
@@ -105,10 +120,15 @@ adminEggsRouter.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Image filename or path is required" });
     }
 
+    if (await isEggNameTaken(name.trim())) {
+      return res.status(409).json({ error: `An egg named "${name.trim()}" already exists` });
+    }
+
     const [newEgg] = await dbClient
       .insert(eggs)
       .values({
         name: name.trim(),
+        rarity: rarity,
         required: parsedRequired,
         image: image.trim(),
       })
@@ -152,6 +172,9 @@ adminEggsRouter.put("/:id", async (req: Request, res: Response) => {
       const trimmed = String(name).trim();
       if (!trimmed) {
         return res.status(400).json({ error: "Egg name cannot be empty" });
+      }
+      if (await isEggNameTaken(trimmed, eggId)) {
+        return res.status(409).json({ error: `An egg named "${trimmed}" already exists` });
       }
       updates.name = trimmed;
     }

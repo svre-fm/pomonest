@@ -117,7 +117,8 @@
 /* Image row */
 .egg-images-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
   width: 90%;
   margin: 0 auto;
 }
@@ -146,7 +147,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 180px;
+  height: 140px;
   overflow: hidden;
   box-sizing: border-box;
   border: 1px dashed #c9b99f;
@@ -400,4 +401,30 @@
   .animal-image-clickable {
     height: 130px;
   }
+}
+/* Select used in the animal form (matches .egg-form-group input) */
+.data-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #e2d7c8;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  background-color: #fff;
+  color: inherit;
+  outline: none;
+}
+
+.egg-form-group input:disabled {
+  background-color: #f5f0e6;
+  cursor: not-allowed;
+}
+
+/* Short description under each egg stage image */
+.egg-image-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #9a896f;
+  text-align: center;
 }

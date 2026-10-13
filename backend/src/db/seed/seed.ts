@@ -1,23 +1,33 @@
+
 import "dotenv/config";
 import { dbClient } from "@db/client.js";
-import { eggs, animals, eggRewards } from "@db/schema.js";
+import { eggs, animals, eggRewards, rarities } from "@db/schema.js";
 
 async function seed() {
   console.log("Seeding master data (eggs, animals, egg_rewards)...");
 
   try {
+    // 1. Rarities
+    await dbClient
+      .insert(rarities)
+      .values(["common", "rare", "epic"].map((name) => ({ name })))
+      .onConflictDoNothing();
+
+    // Skip if master eggs already exist
     const existingEggs = await dbClient.select().from(eggs);
+
     if (existingEggs.length > 0) {
       console.log("Master data already exists! Skipping seed.");
       process.exit(0);
     }
 
-    // 1. Eggs
+    // 2. Eggs
     const [commonEgg] = await dbClient
       .insert(eggs)
       .values({
         name: "common Egg",
-        required: 1, // Test: 1 min, normally 30 min.
+        rarity: "common",
+        required: 1,
         image: "common.png",
       })
       .returning();
@@ -26,6 +36,7 @@ async function seed() {
       .insert(eggs)
       .values({
         name: "rare Egg",
+        rarity: "rare",
         required: 60,
         image: "rare.png",
       })
@@ -35,6 +46,7 @@ async function seed() {
       .insert(eggs)
       .values({
         name: "epic Egg",
+        rarity: "epic",
         required: 120,
         image: "epic.png",
       })
@@ -42,76 +54,80 @@ async function seed() {
 
     console.log("Seeded 3 eggs");
 
-    // 2. Animals
+    // 3. Animals (no rarity)
     const insertedAnimals = await dbClient
       .insert(animals)
       .values([
-        { name: "Cat", rarity: "common", image: "cat.PNG", animation: "A_cat.PNG" },
-        { name: "Dog", rarity: "common", image: "dog.PNG", animation: "A_dog.png" },
-        { name: "Penguin", rarity: "common", image: "peng.PNG", animation: "A_peng.PNG" },
-        { name: "Fish", rarity: "rare", image: "fish.PNG", animation: "A_fish.PNG" },
-        { name: "Panda", rarity: "rare", image: "pan.PNG", animation: "A_pan.PNG" },
-        { name: "Rabbit", rarity: "rare", image: "rab.PNG", animation: "A_rab.PNG" },
-        { name: "Tiger", rarity: "epic", image: "tiger.PNG", animation: "A_tiger.PNG" },
-        { name: "Pig", rarity: "epic", image: "pig.PNG", animation: "A_pig.PNG" },
-        { name: "Kid", rarity: "epic", image: "kid.PNG", animation: "A_kid.PNG" },
+        { name: "Cat", image: "cat.PNG", animation: "A_cat.PNG" },
+        { name: "Dog", image: "dog.PNG", animation: "A_dog.png" },
+        { name: "Penguin", image: "peng.PNG", animation: "A_peng.PNG" },
+        { name: "Fish", image: "fish.PNG", animation: "A_fish.PNG" },
+        { name: "Panda", image: "pan.PNG", animation: "A_pan.PNG" },
+        { name: "Rabbit", image: "rab.PNG", animation: "A_rab.PNG" },
+        { name: "Tiger", image: "tiger.PNG", animation: "A_tiger.PNG" },
+        { name: "Pig", image: "pig.PNG", animation: "A_pig.PNG" },
+        { name: "Kid", image: "kid.PNG", animation: "A_kid.PNG" },
       ])
       .returning();
 
     console.log(`Seeded ${insertedAnimals.length} animals`);
 
-    // 3. Egg Rewards
-    const rareDropRates: Record<string, number> = {
-      Fish: 50,  
-      Panda: 30,
-      Rabbit: 20,
-    };
+    // 4. Map animal names to their IDs
+    const animalId = new Map(
+      insertedAnimals.map((animal) => [animal.name, animal.id]),
+    );
 
-    const commonDropRates: Record<string, number> = {
-      Cat: 34,
-      Dog: 33,
-      Penguin: 33,
-    };
-
-    const epicDropRates: Record<string, number> = {
-      Tiger: 40,
-      Pig: 35,
-      Kid: 25,
-    };
-
-    const cAnimals = insertedAnimals.filter((a) => a.rarity === "common");
-    const rAnimals = insertedAnimals.filter((a) => a.rarity === "rare");
-    const eAnimals = insertedAnimals.filter((a) => a.rarity === "epic");
-
-    const rewardRecords = [];
-
-    for (const ca of cAnimals) {
-      rewardRecords.push({
+    // 5. Define rewards for each egg
+    const rewardConfig = [
+      {
         eggId: commonEgg.id,
-        animalId: ca.id,
-        dropRate: commonDropRates[ca.name] ?? 33,
-      });
-    }
-
-    for (const ra of rAnimals) {
-      rewardRecords.push({
+        animals: [
+          { name: "Cat", dropRate: 34 },
+          { name: "Dog", dropRate: 33 },
+          { name: "Penguin", dropRate: 33 },
+        ],
+      },
+      {
         eggId: rareEgg.id,
-        animalId: ra.id,
-        dropRate: rareDropRates[ra.name] ?? 33,
-      });
-    }
-
-    for (const ea of eAnimals) {
-      rewardRecords.push({
+        animals: [
+          { name: "Fish", dropRate: 50 },
+          { name: "Panda", dropRate: 30 },
+          { name: "Rabbit", dropRate: 20 },
+        ],
+      },
+      {
         eggId: epicEgg.id,
-        animalId: ea.id,
-        dropRate: epicDropRates[ea.name] ?? 33,
-      });
+        animals: [
+          { name: "Tiger", dropRate: 40 },
+          { name: "Pig", dropRate: 35 },
+          { name: "Kid", dropRate: 25 },
+        ],
+      },
+    ];
+
+    const rewardRecords: {
+      eggId: number;
+      animalId: number;
+      dropRate: number;
+    }[] = [];
+
+    for (const config of rewardConfig) {
+      for (const reward of config.animals) {
+        const id = animalId.get(reward.name);
+
+        if (id === undefined) {
+          throw new Error(`Animal "${reward.name}" not found`);
+        }
+
+        rewardRecords.push({
+          eggId: config.eggId,
+          animalId: id,
+          dropRate: reward.dropRate,
+        });
+      }
     }
 
-    if (rewardRecords.length > 0) {
-        await dbClient.insert(eggRewards).values(rewardRecords);
-    }
+    await dbClient.insert(eggRewards).values(rewardRecords);
 
     console.log(`Seeded ${rewardRecords.length} egg rewards`);
     console.log("Seeding completed successfully!");

@@ -6,11 +6,11 @@ import timerRoutes from "./routes/timer.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
 import activitiesRoutes from "./routes/activities.routes.js";
-import gamificationRoutes from "./routes/gamification.routes.js";
 import adminUsersRoutes from "./routes/admin/admin.users.routes.js";
 import adminEggsRoutes from "./routes/admin/admin.eggs.routes.js";
 import adminAnimalsRoutes from "./routes/admin/admin.animals.routes.js";
 import adminRewardsRoutes from "./routes/admin/admin.rewards.routes.js";
+import adminUploadsRoutes from "./routes/admin/admin.uploads.routes.js";
 import adminDashboardRoutes from "./routes/admin/admin.dashborad.routes.ts";
 import { requireAuth, requireAdmin } from "./auth/middleware.js";
 import { startCleanupJob } from "./jobs/cleanup-unverified-users.js";
@@ -49,7 +49,6 @@ app.use("/api/timer", timerRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/activities", activitiesRoutes);
-app.use("/api", gamificationRoutes);
 
 // ==========================================
 // Admin Routes (Protected by requireAuth & requireAdmin)
@@ -61,6 +60,7 @@ app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/admin/eggs", adminEggsRoutes);
 app.use("/api/admin/animals", adminAnimalsRoutes);
 app.use("/api/admin/egg-rewards", adminRewardsRoutes);
+app.use("/api/admin/uploads", adminUploadsRoutes);
 
 
 // ==========================================

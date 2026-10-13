@@ -27,12 +27,6 @@ export const eggStatusEnum = pgEnum("egg_status", [
   "hatched",
 ]);
 
-export const rarityEnum = pgEnum("rarity", [
-  "common",
-  "rare",
-  "epic",
-]);
-
 export const userRoleEnum = pgEnum("user_role", [
   "user",
   "admin",
@@ -131,6 +125,8 @@ export const eggs = pgTable("eggs", {
 
   required: integer("required").notNull(),
 
+  rarity: varchar("rarity", { length: 50 }).notNull().default("common"),
+
   image: varchar("image", { length: 255 }).notNull(),
 });
 
@@ -183,17 +179,23 @@ export const focusSessions = pgTable("focus_sessions", {
 });
 
 
+// rarities (แอดมินเพิ่ม/แก้ไข/ลบได้เอง)
+// name ต้องเป็นคำเดียว ตัวพิมพ์เล็ก เพราะระบบอ่าน rarity ของสัตว์จากคำแรกของชื่อไข่ เช่น "epic Egg" -> "epic"
+export const rarities = pgTable("rarities", {
+  id: serial("id").primaryKey(),
+
+  name: varchar("name", { length: 50 }).notNull().unique(),
+});
+
 //animal
 export const animals = pgTable("animals", {
   id: serial("id").primaryKey(),
 
   name: varchar("name", { length: 100 }).notNull(),
 
-  rarity: rarityEnum("rarity").default("common"),
-
   image: varchar("image", { length: 255 }).notNull(),
 
-  animation: varchar("animation", { length: 255 }).notNull()
+  animation: varchar("animation", { length: 255 }).notNull(),
 });
 
 //egg rewards table
