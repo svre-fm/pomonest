@@ -60,7 +60,7 @@ authRouter.post("/register", async (req: Request, res: Response) => {
         avatar: avatar ?? null,
         emailVerified: false,
         verificationToken: token,
-        verificationExpire: new Date(Date.now() + 5 * 60 * 1000),
+        verificationExpire: new Date(Date.now() + 30 * 60 * 1000),
       })
       .returning();
 

@@ -10,7 +10,7 @@ import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import EggDetail from '../../component/EggDetail';
 import AnimalDetail from '../../component/AnimalDetail';
 import type { EggRow } from '../../component/EggDetail';
-import type { AnimalRow, Rarity } from '../../component/AnimalDetail';
+import type { AnimalRow } from '../../component/AnimalDetail';
 import { authFetch } from '../../utils/authFetch';
 
 import '../../css/data.css';
@@ -18,20 +18,16 @@ import '../../css/admin.css';
 import '../../css/usersmanage.css';
 
 type Page = 'egg' | 'animal';
-type RarityFilter = '' | Rarity;
-
-const RARITY_OPTIONS: { value: RarityFilter; label: string }[] = [
-  { value: '', label: 'All' },
-  { value: 'common', label: 'Common' },
-  { value: 'rare', label: 'Rare' },
-  { value: 'epic', label: 'Epic' },
-];
+type RarityFilter = string;
 
 function formatMinutes(minutes: number): string {
-  if (minutes < 60) return `${minutes} minutes`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m ? `${h} hr ${m} min` : `${h} hr`;
+
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} hr`;
+
+  return `${h} hr ${m} min`;
 }
 
 export default function Datamanage() {
@@ -40,6 +36,31 @@ export default function Datamanage() {
 
   const [eggs, setEggs] = useState<EggRow[]>([]);
   const [animals, setAnimals] = useState<AnimalRow[]>([]);
+
+  const rarities = useMemo(
+    () =>
+      [
+        ...new Set(
+          eggs
+            .map((egg) => egg.rarity)
+            .filter((rarity): rarity is string => Boolean(rarity))
+            .map((rarity) => rarity.toLowerCase()),
+        ),
+      ].sort(),
+    [eggs],
+  );
+
+  const rarityOptions = useMemo(
+    () => [
+      { value: '', label: 'All' },
+      ...rarities.map((rarity) => ({
+        value: rarity,
+        label: rarity.charAt(0).toUpperCase() + rarity.slice(1),
+      })),
+    ],
+    [rarities],
+  );
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -206,7 +227,7 @@ export default function Datamanage() {
                 onClick={() => setIsopenroleDropdown(!isopenroleDropdown)}
               >
                 {rarityFilter
-                  ? RARITY_OPTIONS.find((o) => o.value === rarityFilter)?.label
+                  ? rarityOptions.find((o) => o.value === rarityFilter)?.label
                   : 'Rarity'}
                 <FontAwesomeIcon
                   icon={isopenroleDropdown ? faAngleRight : faAngleDown}
@@ -216,10 +237,12 @@ export default function Datamanage() {
 
               {isopenroleDropdown && (
                 <div className="dropdown">
-                  {RARITY_OPTIONS.map((option) => (
+                  {rarityOptions.map((option) => (
                     <button
                       key={option.value || 'all'}
-                      className={`dropdown-item ${option.value === rarityFilter ? 'selected' : ''}`}
+                      className={`dropdown-item ${
+                        option.value === rarityFilter ? 'selected' : ''
+                      }`}
                       onClick={() => {
                         setRarityFilter(option.value);
                         setIsopenroleDropdown(false);
@@ -269,7 +292,26 @@ export default function Datamanage() {
                     <td>{egg.id}</td>
                     <td>{egg.name}</td>
                     <td>{formatMinutes(egg.required)}</td>
-                    <td>{egg.rewardsCount} animals</td>
+                    <td style={{display: "flex"}}>
+                      {animals
+                        .filter((animal) =>
+                          animal.droppedFromEggs.some((reward) => reward.eggId === egg.id),
+                        )
+                        .map((animal) => (
+                          <img
+                            key={animal.id}
+                            src={`/images/animal/${animal.image}`}
+                            alt={animal.name}
+                            title={animal.name}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              objectFit: 'contain',
+                              marginRight: '8px',
+                            }}
+                          />
+                        ))}
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                         <button
@@ -315,8 +357,26 @@ export default function Datamanage() {
                 {animals.map((animal) => (
                   <tr className="row" key={animal.id}>
                     <td>{animal.id}</td>
-                    <td>{animal.name}</td>
-                    <td style={{ textTransform: 'capitalize' }}>{animal.rarity ?? 'common'}</td>
+                    <td style={{display:'flex', alignItems: 'center'}}>
+                       <img
+                            key={animal.id}
+                            src={`/images/animal/${animal.image}`}
+                            alt={animal.name}
+                            title={animal.name}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              objectFit: 'contain',
+                              marginRight: '8px',
+                            }}
+                          />
+                      {animal.name}
+                    </td>
+                    <td style={{ textTransform: 'capitalize' }}>
+                      {animal.droppedFromEggs.length
+                        ? [...new Set(animal.droppedFromEggs.map((e) => e.rarity))].join(', ')
+                        : '-'}
+                    </td>
                     <td>
                       {animal.droppedFromEggs.length
                         ? animal.droppedFromEggs.map((e) => e.eggName).join(', ')
@@ -352,6 +412,7 @@ export default function Datamanage() {
       {editingEgg && (
         <EggDetail
           egg={editingEgg === 'new' ? null : editingEgg}
+          rarities={rarities}
           onClose={() => setEditingEgg(null)}
           onSaved={handleSaved}
         />
@@ -361,6 +422,7 @@ export default function Datamanage() {
         <AnimalDetail
           animal={editingAnimal === 'new' ? null : editingAnimal}
           eggs={eggs}
+          rarities={rarities}
           onClose={() => setEditingAnimal(null)}
           onSaved={handleSaved}
         />

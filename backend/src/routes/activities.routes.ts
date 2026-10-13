@@ -81,7 +81,7 @@ activitiesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
       .values({
         userId: req.user!.userId,
         name: resolvedName,
-        color: color ? String(color).trim() : "#7fa65a",
+        color: color ? String(color).trim() : "#000000ff",
       })
       .returning();
 

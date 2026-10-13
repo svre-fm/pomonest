@@ -64,16 +64,19 @@ th {
 }
 
 tr.row td {
+  height: 60px;
   border-top: 2px solid #fad48f;
   border-bottom: 2px solid #fad48f;
 }
 
 tr.row td:first-child {
+  height: 60px;
   border-left: 2px solid #fad48f;
   border-radius: 10px 0 0 10px;
 }
 
 tr.row td:last-child {
+  height: 60px;
   border-right: 2px solid #fad48f;
   border-radius: 0 10px 10px 0;
 }

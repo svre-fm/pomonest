@@ -6,6 +6,8 @@ import timerRoutes from "./routes/timer.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
 import activitiesRoutes from "./routes/activities.routes.js";
+import gamificationRoutes from "./routes/gamification.routes.js";
+import statisticsRouter from "./routes/statistics.routes.js";
 import adminUsersRoutes from "./routes/admin/admin.users.routes.js";
 import adminEggsRoutes from "./routes/admin/admin.eggs.routes.js";
 import adminAnimalsRoutes from "./routes/admin/admin.animals.routes.js";
@@ -49,6 +51,8 @@ app.use("/api/timer", timerRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/activities", activitiesRoutes);
+app.use("/api", gamificationRoutes);
+app.use("/api/statistics", statisticsRouter);
 
 // ==========================================
 // Admin Routes (Protected by requireAuth & requireAdmin)

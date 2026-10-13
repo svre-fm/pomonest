@@ -17,6 +17,11 @@ async function isEggNameTaken(name: string, excludeId?: number): Promise<boolean
   return !!found;
 }
 
+// ดึง rarity จากคำแรกของชื่อไข่
+function getRarityFromEggName(name: string): string {
+  return name.trim().split(/\s+/)[0].toLowerCase();
+}
+
 // ==========================================
 // GET /api/admin/eggs - ดึงรายการไข่ทั้งหมด พร้อมจำนวนรางวัลที่ผูกอยู่
 // ==========================================
@@ -101,46 +106,52 @@ adminEggsRouter.get("/:id", async (req: Request, res: Response) => {
 // ==========================================
 adminEggsRouter.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, rarity,  required, image } = req.body;
+    const { name, required, image } = req.body;
+    const updates: Partial<typeof eggs.$inferInsert> = {};
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "Egg name is required" });
     }
 
-    if (!rarity || typeof rarity !== "string" || !rarity.trim()) {
-      return res.status(400).json({ error: "Egg name is required" });
-    }
+    const trimmedName = name.trim();
+    const rarity = getRarityFromEggName(trimmedName);
 
     const parsedRequired = Number(required);
-    if (isNaN(parsedRequired) || parsedRequired <= 0) {
-      return res.status(400).json({ error: "Required minutes must be a positive number" });
+    if (!Number.isInteger(parsedRequired) || parsedRequired <= 0) {
+      return res.status(400).json({
+        error: "Required minutes must be a positive whole number",
+      });
     }
 
     if (!image || typeof image !== "string" || !image.trim()) {
-      return res.status(400).json({ error: "Image filename or path is required" });
+      return res.status(400).json({
+        error: "Image filename or path is required",
+      });
     }
 
-    if (await isEggNameTaken(name.trim())) {
-      return res.status(409).json({ error: `An egg named "${name.trim()}" already exists` });
+    if (await isEggNameTaken(trimmedName)) {
+      return res.status(409).json({
+        error: `An egg named "${trimmedName}" already exists`,
+      });
     }
 
     const [newEgg] = await dbClient
       .insert(eggs)
       .values({
-        name: name.trim(),
-        rarity: rarity,
+        name: trimmedName,
+        rarity,
         required: parsedRequired,
         image: image.trim(),
       })
       .returning();
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Egg created successfully",
       data: newEgg,
     });
   } catch (error) {
     console.error("Error creating egg by admin:", error);
-    res.status(500).json({ error: "Failed to create egg" });
+    return res.status(500).json({ error: "Failed to create egg" });
   }
 });
 
@@ -169,14 +180,22 @@ adminEggsRouter.put("/:id", async (req: Request, res: Response) => {
     const updates: Partial<typeof eggs.$inferInsert> = {};
 
     if (name !== undefined) {
-      const trimmed = String(name).trim();
-      if (!trimmed) {
-        return res.status(400).json({ error: "Egg name cannot be empty" });
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({
+          error: "Egg name cannot be empty",
+        });
       }
-      if (await isEggNameTaken(trimmed, eggId)) {
-        return res.status(409).json({ error: `An egg named "${trimmed}" already exists` });
+
+      const trimmedName = name.trim();
+
+      if (await isEggNameTaken(trimmedName, eggId)) {
+        return res.status(409).json({
+          error: `An egg named "${trimmedName}" already exists`,
+        });
       }
-      updates.name = trimmed;
+
+      updates.name = trimmedName;
+      updates.rarity = getRarityFromEggName(trimmedName);
     }
 
     if (required !== undefined) {

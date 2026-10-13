@@ -9,7 +9,7 @@ import {
   validateImage,
 } from '../utils/uploadImage';
 import type { EggStage } from '../utils/uploadImage';
-import { normalizeEggName, rarityFromEggName } from '../utils/eggName';
+import { normalizeEggName } from '../utils/eggName';
 
 import '../css/eggdetail.css';
 import '../css/admin.css';
@@ -17,6 +17,7 @@ import '../css/admin.css';
 export interface EggRow {
   id: number;
   name: string;
+  rarity: string;
   required: number; // minutes
   image: string; // main image filename, served from /images/ (stage images are derived from it)
   rewardsCount: number;
@@ -39,7 +40,7 @@ type StageMap<T> = Record<EggStage, T>;
 
 const emptyMap = <T,>(value: T): StageMap<T> => ({ normal: value, cracked: value, split: value });
 
-export default function EggDetail({ egg, rarities, onClose, onSaved }: Eggprop) {
+export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
   const isEdit = egg !== null;
 
   // Current image of each stage on the server (edit mode only)
@@ -60,8 +61,11 @@ export default function EggDetail({ egg, rarities, onClose, onSaved }: Eggprop) 
 
   // Live hint: which rarity the animals of this egg will get, based on the name typed so far
   const normalizedName = normalizeEggName(name);
-  const firstWord = normalizedName.split(' ')[0]?.toLowerCase() ?? '';
-  const nameRarity = normalizedName ? rarityFromEggName(normalizedName, rarities) : null;
+
+  // ดึงคำแรกของชื่อไข่มาเป็น rarity
+  const nameRarity = normalizedName
+    ? normalizedName.split(' ')[0].toLowerCase()
+    : '';
 
   const inputRefs = useRef<StageMap<HTMLInputElement | null>>(emptyMap(null));
   const previewsRef = useRef(previews);
@@ -113,6 +117,9 @@ export default function EggDetail({ egg, rarities, onClose, onSaved }: Eggprop) 
     // Add the missing "Egg" suffix (e.g. "epic" -> "epic Egg") before saving
     const eggName = normalizeEggName(name);
     if (!eggName) return setError('Please enter an egg name.');
+
+    const rarity = eggName.split(' ')[0].toLowerCase();
+
     if (!Number.isInteger(minutes) || minutes <= 0) {
       return setError('Hatch time must be a whole number of minutes greater than 0.');
     }
@@ -162,9 +169,9 @@ export default function EggDetail({ egg, rarities, onClose, onSaved }: Eggprop) 
       // 3) save the egg itself
       const res = await authFetch(isEdit ? `/api/admin/eggs/${egg.id}` : '/api/admin/eggs', {
         method: isEdit ? 'PUT' : 'POST',
-        body: JSON.stringify({ name: eggName, required: minutes, image }),
+        body: JSON.stringify({ name: eggName, rarity, required: minutes, image }),
       });
-      
+
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Failed to save egg');
       onSaved(isEdit ? `Updated egg "${eggName}".` : `Created egg "${eggName}".`);
@@ -197,10 +204,8 @@ export default function EggDetail({ egg, rarities, onClose, onSaved }: Eggprop) 
             />
             <p className="egg-image-hint" style={{ textAlign: 'left' }}>
               {!normalizedName
-                ? `Start the name with a rarity (${rarities.join(', ') || 'none created yet'}). "Egg" is added automatically if missing.`
-                : nameRarity
-                  ? `Saved as "${normalizedName}". Animals of this egg will be ${nameRarity}.`
-                  : `Saved as "${normalizedName}". There is no rarity "${firstWord}" yet, so animals can't use this egg until you add it in the Rarities tab.`}
+                ? 'Enter an egg name. The first word will be used as its rarity.'
+                : `Saved as "${normalizedName}". Rarity: "${nameRarity}".`}
             </p>
           </div>
 

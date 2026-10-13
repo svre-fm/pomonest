@@ -1,26 +1,10 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { and, eq, ilike } from "drizzle-orm";
+import { and, eq, ilike, asc  } from "drizzle-orm";
 import { dbClient } from "@db/client.js";
 import { animals, eggRewards, userAnimals, eggs, rarities } from "@db/schema.js";
 
 const adminAnimalsRouter = Router();
-
-// rarity ที่ใช้ได้ดูจากตาราง rarities (แอดมินเพิ่มเองได้) ไม่ได้ fix ไว้ในโค้ด
-async function resolveRarity(value: unknown): Promise<string | null> {
-  if (typeof value !== "string") return null;
-  const name = value.trim().toLowerCase();
-  if (!name) return null;
-  const [found] = await dbClient
-    .select({ name: rarities.name })
-    .from(rarities)
-    .where(eq(rarities.name, name))
-    .limit(1);
-  return found?.name ?? null;
-}
-
-const unknownRarityError = (value: unknown) =>
-  `Unknown rarity "${String(value)}". Add it in the Rarities tab first.`;
 
 // ==========================================
 // GET /api/admin/animals - ดึงรายการสัตว์ทั้งหมด
@@ -49,12 +33,13 @@ adminAnimalsRouter.get("/", async (req: Request, res: Response) => {
         id: animals.id,
         name: animals.name,
         image: animals.image,
-        // เพิ่มคอลัมน์อื่นของ animals ที่ต้องการส่งกลับได้
+        animation: animals.animation,
       })
       .from(animals)
       .innerJoin(eggRewards, eq(eggRewards.animalId, animals.id))
       .innerJoin(eggs, eq(eggRewards.eggId, eggs.id))
-      .where(whereClause);
+      .where(whereClause)
+      .orderBy(asc(animals.id));
 
     // ดึงข้อมูลไข่ที่สัตว์แต่ละตัวสามารถได้รับจากไข่ได้
     const allRewards = await dbClient

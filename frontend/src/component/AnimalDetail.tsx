@@ -3,7 +3,6 @@ import { faXmark, faImage } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { authFetch } from '../utils/authFetch';
 import { uploadImage, validateImage } from '../utils/uploadImage';
-import { rarityFromEggName } from '../utils/eggName';
 import type { EggRow } from './EggDetail';
 
 
@@ -13,10 +12,9 @@ import '../css/admin.css';
 export interface AnimalRow {
   id: number;
   name: string;
-  rarity: string | null;
   image: string; // filename, served from /images/animal/
   animation: string; // filename, served from /images/animal/
-  droppedFromEggs: { eggId: number; eggName: string; dropRate: number }[];
+  droppedFromEggs: { eggId: number; eggName: string; rarity: string; dropRate: number }[];
 }
 
 interface Animalprop {
@@ -61,7 +59,7 @@ export default function AnimalDetail({ animal, eggs, rarities, onClose, onSaved 
 
   // Rarity isn't chosen by hand: it comes from the selected egg's name ("epic Egg" -> epic)
   const selectedEgg = useMemo(() => eggs.find((e) => String(e.id) === eggId), [eggs, eggId]);
-  const rarity = selectedEgg ? rarityFromEggName(selectedEgg.name, rarities) : null;
+  const rarity = selectedEgg?.rarity ?? '';
 
   const input1Ref = useRef<HTMLInputElement>(null);
   const input2Ref = useRef<HTMLInputElement>(null);
@@ -169,7 +167,7 @@ export default function AnimalDetail({ animal, eggs, rarities, onClose, onSaved 
       const image = image1 ? await uploadImage(image1, 'animal') : animal!.image;
       const animation = image2 ? await uploadImage(image2, 'animal') : animal!.animation;
 
-      const payload = { name: name.trim(), rarity, image, animation };
+      const payload = { name: name.trim(), image, animation };
       const saved = isEdit
         ? await request(`/api/admin/animals/${animal.id}`, 'PUT', payload)
         : await request('/api/admin/animals', 'POST', payload);

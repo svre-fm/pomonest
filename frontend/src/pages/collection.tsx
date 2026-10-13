@@ -9,10 +9,10 @@ interface CollectionProps {
 interface AnimalData {
   id: string;
   name: string;
-  rarity: string;
   image: string;
   animation?: string;
   description?: string | null;
+  rarity?: string;
 }
 
 const DEFAULT_ANIMALS: AnimalData[] = [
@@ -46,13 +46,14 @@ export default function Collection({ collection = [] }: CollectionProps) {
   const [unlockedImages, setUnlockedImages] = useState<Set<string>>(new Set());
 
   const authFetch = (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
+
     return fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
         ...options.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
   };
@@ -188,7 +189,7 @@ export default function Collection({ collection = [] }: CollectionProps) {
           const isUnlocked =
             unlockedAnimalIds.has(animal.id) || unlockedImages.has(animal.image);
 
-          const rarityLower = animal.rarity.toLowerCase();
+          const rarityLower = (animal.rarity ?? 'common').toLowerCase();
 
           return (
             <div

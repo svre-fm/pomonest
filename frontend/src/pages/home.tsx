@@ -12,7 +12,6 @@ interface OwnedAnimal {
   nickname: string | null;
   obtainedAt: string;
   animalName: string;
-  animalRarity: string;
   animalImage: string;
   animalAnimation: string;
 }
