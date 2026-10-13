@@ -65,7 +65,7 @@ const ROLE_OPTIONS: Option[] = [
   { value: 'user', label: 'User' },
 ];
 
-// 'Enabled/Disabled' = บัญชีถูกระงับหรือไม่ (คนละเรื่องกับ Active Users ที่นับจากการใช้งาน)
+// 'Enabled/Disabled' = บัญชีถูกระงับหรือไม่
 const STATUS_OPTIONS: Option[] = [
   { value: 'status', label: 'All' },
   { value: 'active', label: 'Enabled' },
@@ -88,7 +88,6 @@ function getStoredUserId(): string | undefined {
   }
 }
 
-// ข้อความตัวเลขเล็กๆ ใต้ชื่อ แสดงเมื่อเรียงตามสถิติ เพื่อให้เห็นว่าอันดับมาจากค่าอะไร
 function metricText(user: UserRow, sort: SortKey): string {
   if (sort === 'focus') return `${formatDuration(user.focusSeconds)} focus`;
   if (sort === 'eggs') return `${user.eggsHatched} eggs hatched`;
@@ -180,8 +179,6 @@ export default function Usersmanage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentUserId] = useState(getStoredUserId);
 
-  // ดีเลย์การค้นหา 300ms เพื่อไม่ให้ยิง API ทุกตัวอักษรที่พิมพ์
-  // (ถ้าคำค้นยังเท่าเดิมให้ข้าม ไม่งั้นตอนเปิดหน้าจะเด้งกลับหน้า 1 โดยไม่ได้ตั้งใจ)
   useEffect(() => {
     const next = searchInput.trim();
     if (next === search) return;
@@ -193,7 +190,6 @@ export default function Usersmanage() {
     return () => clearTimeout(timer);
   }, [searchInput, search]);
 
-  // การ์ดด้านบน (เปลี่ยนตามปุ่ม All/Week/Month/Year)
   useEffect(() => {
     let cancelled = false;
 
@@ -213,7 +209,7 @@ export default function Usersmanage() {
     };
   }, [range, refreshKey]);
 
-  // ตารางผู้ใช้ (ค้นหา / กรอง / เรียง / แบ่งหน้า) ใช้ cancelled กันผลลัพธ์เก่ามาทับผลใหม่
+  // ตารางผู้ใช้
   useEffect(() => {
     let cancelled = false;
 

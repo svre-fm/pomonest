@@ -18,14 +18,14 @@ export interface EggRow {
   id: number;
   name: string;
   rarity: string;
-  required: number; // minutes
-  image: string; // main image filename, served from /images/ (stage images are derived from it)
+  required: number; 
+  image: string; 
   rewardsCount: number;
 }
 
 interface Eggprop {
-  egg: EggRow | null; // null = create new egg
-  rarities: string[]; // rarity names created by the admin
+  egg: EggRow | null;
+  rarities: string[]; 
   onClose: () => void;
   onSaved: (message: string) => void;
 }
@@ -58,8 +58,6 @@ export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
   const [broken, setBroken] = useState<StageMap<boolean>>(emptyMap(false));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Live hint: which rarity the animals of this egg will get, based on the name typed so far
   const normalizedName = normalizeEggName(name);
 
   // ดึงคำแรกของชื่อไข่มาเป็น rarity
@@ -71,7 +69,6 @@ export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
   const previewsRef = useRef(previews);
   previewsRef.current = previews;
 
-  // Release blob preview URLs on unmount (never the existing /images/... paths)
   useEffect(() => {
     return () => {
       Object.values(previewsRef.current).forEach((url) => {
@@ -95,7 +92,7 @@ export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
     setPreview(stage, URL.createObjectURL(file));
   };
 
-  // Reset the form to its starting values without closing the window
+ 
   const handleCancel = () => {
     setName(egg?.name ?? '');
     setRequired(egg ? String(egg.required) : '');
@@ -114,7 +111,6 @@ export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
     setError('');
 
     const minutes = Number(required);
-    // Add the missing "Egg" suffix (e.g. "epic" -> "epic Egg") before saving
     const eggName = normalizeEggName(name);
     if (!eggName) return setError('Please enter an egg name.');
 
@@ -153,20 +149,16 @@ export default function EggDetail({ egg, onClose, onSaved, }: Eggprop) {
     try {
       let image = egg?.image ?? '';
 
-      // 1) main image: new egg -> saved under a unique name, edit -> replaced in place
       if (files.normal) {
         image = isEdit
           ? await uploadImage(files.normal, 'egg', { overwrite: true, baseName: egg.image })
           : await uploadImage(files.normal, 'egg');
       }
-
-      // 2) stage images, named from the main image's final filename
       for (const stage of ['cracked', 'split'] as const) {
         const file = files[stage];
         if (file) await uploadImage(file, 'egg', { stage, baseName: image });
       }
 
-      // 3) save the egg itself
       const res = await authFetch(isEdit ? `/api/admin/eggs/${egg.id}` : '/api/admin/eggs', {
         method: isEdit ? 'PUT' : 'POST',
         body: JSON.stringify({ name: eggName, rarity, required: minutes, image }),

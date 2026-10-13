@@ -6,7 +6,7 @@ import { eggs, eggRewards, animals, userEggs } from "@db/schema.js";
 
 const adminEggsRouter = Router();
 
-// ชื่อไข่ห้ามซ้ำ (ไม่สนตัวพิมพ์เล็ก/ใหญ่) เพราะชื่อไข่ใช้บอก rarity ของสัตว์
+// ชื่อไข่ห้ามซ้ำ เพราะชื่อไข่ใช้บอก rarity ของสัตว์
 async function isEggNameTaken(name: string, excludeId?: number): Promise<boolean> {
   const sameName = sql`lower(${eggs.name}) = ${name.toLowerCase()}`;
   const [found] = await dbClient
@@ -73,7 +73,6 @@ adminEggsRouter.get("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Egg not found" });
     }
 
-    // ดึงรางวัลของไข่นี้พร้อมรายละเอียดสัตว์
     const rewards = await dbClient
       .select({
         rewardId: eggRewards.id,
@@ -268,10 +267,7 @@ adminEggsRouter.delete("/:id", async (req: Request, res: Response) => {
       });
     }
 
-    // ลบ egg_rewards ของไข่นี้ก่อน
     await dbClient.delete(eggRewards).where(eq(eggRewards.eggId, eggId));
-
-    // ลบ egg
     await dbClient.delete(eggs).where(eq(eggs.id, eggId));
 
     res.status(200).json({

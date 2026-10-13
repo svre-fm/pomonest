@@ -12,15 +12,15 @@ import '../css/admin.css';
 export interface AnimalRow {
   id: number;
   name: string;
-  image: string; // filename, served from /images/animal/
-  animation: string; // filename, served from /images/animal/
+  image: string; 
+  animation: string;
   droppedFromEggs: { eggId: number; eggName: string; rarity: string; dropRate: number }[];
 }
 
 interface Animalprop {
-  animal: AnimalRow | null; // null = create new animal
+  animal: AnimalRow | null; 
   eggs: EggRow[];
-  rarities: string[]; // rarity names created by the admin
+  rarities: string[];
   onClose: () => void;
   onSaved: (message: string) => void;
 }
@@ -28,7 +28,6 @@ interface Animalprop {
 const IMAGE_DIR = '/images/animal/';
 const DEFAULT_DROP_RATE = 10;
 
-// Throws with the backend's error message when a request fails
 async function request(url: string, method: string, body?: unknown) {
   const res = await authFetch(url, {
     method,
@@ -57,14 +56,13 @@ export default function AnimalDetail({ animal, eggs, rarities, onClose, onSaved 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Rarity isn't chosen by hand: it comes from the selected egg's name ("epic Egg" -> epic)
+  
   const selectedEgg = useMemo(() => eggs.find((e) => String(e.id) === eggId), [eggs, eggId]);
   const rarity = selectedEgg?.rarity ?? '';
 
   const input1Ref = useRef<HTMLInputElement>(null);
   const input2Ref = useRef<HTMLInputElement>(null);
 
-  // Release blob preview URLs (but never the existing /images/... paths)
   useEffect(() => {
     return () => {
       if (preview1?.startsWith('blob:')) URL.revokeObjectURL(preview1);
@@ -108,7 +106,6 @@ export default function AnimalDetail({ animal, eggs, rarities, onClose, onSaved 
   };
 
   // Keep egg_rewards in sync with the selected egg.
-  // The list endpoint doesn't return reward ids, so read them from the detail endpoint.
   const syncEggLink = async (animalId: number, rate: number) => {
     const detail = await request(`/api/admin/animals/${animalId}`, 'GET');
     const links: { rewardId: number; eggId: number; dropRate: number }[] =

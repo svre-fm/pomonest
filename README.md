@@ -23,15 +23,15 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=pomonest
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=0000
+POSTGRES_PASSWORD=your pass
 POSTGRES_APP_USER=appuser
-POSTGRES_APP_PASSWORD=1111
-BACKEND_PORT=3001
+POSTGRES_APP_PASSWORD=your pass
+BACKEND_PORT=3012
 FRONTEND_PORT=6012
-EMAIL_USER=pomonest.team@gmail.com
-EMAIL_PASSWORD=lnyyndvhnjhzowch
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
 FRONTEND_URL=http://localhost:6012
-BACKEND_URL=http://localhost:3001
+BACKEND_URL=http://localhost:3012
 ```
 
 Create a `.env` file in the `frontend` folder with the following values:
@@ -62,7 +62,7 @@ docker compose up -d --build
 ```bash
 cd backend
 pnpm run db:push
-pnpm run db:seed
+pnpm run db:seed:all
 pnpm run dev
 ```
 

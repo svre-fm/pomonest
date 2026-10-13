@@ -7,24 +7,17 @@ import { dbClient } from "@db/client.js";
 import { eggs } from "@db/schema.js";
 
 const adminUploadsRouter = Router();
-
-// ที่เก็บรูป: ต้องเป็นโฟลเดอร์ public/images ของ frontend เพราะทั้งแอปอ้างรูปผ่าน /images/...
-//   - ไข่   -> <UPLOAD_DIR>/<file>
-//   - สัตว์ -> <UPLOAD_DIR>/animal/<file>
-// รันในเครื่อง (cwd = backend) และใน Docker (cwd = /app/backend) ค่า default ชี้ไปที่ ../frontend/public/images
 const UPLOAD_ROOT = path.resolve(
   process.env.UPLOAD_DIR || path.join(process.cwd(), "..", "frontend", "public", "images"),
 );
 
 const TYPE_CONFIG = {
   egg: { dir: UPLOAD_ROOT, maxBytes: 10 * 1024 * 1024 },
-  // รูป animation ของสัตว์ที่มีอยู่เดิมใหญ่มาก (หลายสิบ MB) จึงเผื่อขนาดไว้สูงกว่า
   animal: { dir: path.join(UPLOAD_ROOT, "animal"), maxBytes: 100 * 1024 * 1024 },
 } as const;
 
 type UploadType = keyof typeof TYPE_CONFIG;
 
-// ไข่มี 3 รูป: ปกติ (<name>.<ext>) กับอีก 2 สเตจที่ Focus.tsx สร้างชื่อจากชื่อรูปปกติ (<name>-cracked.<ext>, <name>-split.<ext>)
 const EGG_STAGES = ["cracked", "split"] as const;
 type EggStage = (typeof EGG_STAGES)[number];
 
@@ -38,7 +31,7 @@ function isJpeg(buf: Buffer) {
   return buf.subarray(0, 3).equals(JPEG_MAGIC);
 }
 
-// ตัด path ออก เหลือเฉพาะ a-z 0-9 . _ - กัน path traversal
+// ตัด path ออก
 function sanitizeFilename(raw: string): string | null {
   const base = path.basename(raw.replace(/\\/g, "/"));
   const ext = path.extname(base).toLowerCase();
@@ -68,12 +61,6 @@ function parseBody(req: Request, res: Response, next: NextFunction) {
 // ==========================================
 // POST /api/admin/uploads?type=egg|animal&filename=cat.png
 // body: raw bytes, Content-Type: image/png | image/jpeg
-// ค่าเริ่มต้น: ถ้าชื่อไฟล์ซ้ำกับของเดิม จะไม่เขียนทับ แต่ต่อท้ายชื่อด้วยตัวเลขแล้วส่งชื่อสุดท้ายกลับไปให้
-//
-// เฉพาะ type=egg มีตัวเลือกเพิ่ม:
-//   &stage=cracked|split   filename คือ "ชื่อรูปปกติของไข่" ระบบจะบันทึกเป็น <name>-<stage>.<ext> (เขียนทับได้ เพราะเป็นไฟล์ของสเตจนั้นเสมอ)
-//   &overwrite=true        เขียนทับรูปปกติเดิมของไข่ (ใช้ตอนแก้ไขไข่) อนุญาตเฉพาะชื่อที่ไข่ในฐานข้อมูลใช้อยู่จริง
-//                          กันไม่ให้ไปเขียนทับไฟล์อื่นในโฟลเดอร์ images เช่น logo.png
 // ==========================================
 adminUploadsRouter.post("/", parseBody, async (req: Request, res: Response) => {
   try {
@@ -111,8 +98,6 @@ adminUploadsRouter.post("/", parseBody, async (req: Request, res: Response) => {
       });
     }
 
-    // ตรวจเนื้อไฟล์จริง ไม่เชื่อแค่นามสกุล/Content-Type
-    // (รูปสเตจใช้นามสกุลเดียวกับรูปปกติ เพราะ Focus.tsx สร้างชื่อไฟล์จากนามสกุลของรูปปกติ)
     const ext = path.extname(filename).toLowerCase();
     const validContent = ext === ".png" ? isPng(body) : isJpeg(body);
     if (!validContent) {
@@ -144,7 +129,6 @@ adminUploadsRouter.post("/", parseBody, async (req: Request, res: Response) => {
     if (stage !== null || overwrite) {
       await fs.writeFile(path.join(config.dir, finalName), body);
     } else {
-      // flag "wx" = เขียนเฉพาะไฟล์ใหม่ ไม่ทับของเดิม
       for (let attempt = 0; ; attempt++) {
         try {
           await fs.writeFile(path.join(config.dir, finalName), body, { flag: "wx" });

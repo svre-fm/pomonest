@@ -16,8 +16,7 @@ import { runAsAdmin, logAdminAction } from "../../utils/adminHelpers.js";
 
 const adminUsersRouter = Router();
 
-// สถิติรายผู้ใช้ (เขียนชื่อตารางเต็มเอง ไม่ใช้ ${column} เพราะ Drizzle ตัดชื่อตารางออกใน select ตารางเดียว
-// ทำให้ subquery เทียบผิดคอลัมน์)
+// สถิติรายผู้ใช้
 const focusSecondsExpr = sql<number>`(select coalesce(sum(fs.duration), 0)::int from focus_sessions fs where fs.user_id = users.id and fs.status = 'completed')`;
 const eggsHatchedExpr = sql<number>`(select count(*)::int from user_eggs ue where ue.user_id = users.id and ue.status = 'hatched')`;
 const animalCountExpr = sql<number>`(select count(*)::int from user_animals ua where ua.user_id = users.id)`;
@@ -94,7 +93,7 @@ adminUsersRouter.get("/", async (req: Request, res: Response) => {
       })
       .from(users)
       .where(whereClause)
-      .orderBy(...orderBy, asc(users.id)) // asc(users.id) ท้ายสุดทำให้ลำดับคงที่เมื่อค่าเท่ากัน (แบ่งหน้าไม่ซ้ำ/ไม่ตก)
+      .orderBy(...orderBy, asc(users.id))
       .limit(limitNum)
       .offset(offset);
 
@@ -462,8 +461,6 @@ adminUsersRouter.delete("/:id", async (req: Request, res: Response) => {
         };
       }
 
-      // ลบข้อมูลที่ผูก foreign key ทั้งหมดของผู้ใช้รายนี้ก่อน
-      // (อยู่ใน transaction เดียว ถ้าขั้นใดพัง ทุกอย่างถูกยกเลิก)
       await tx.delete(focusSessions).where(eq(focusSessions.userId, userId));
       await tx.delete(userAnimals).where(eq(userAnimals.userId, userId));
       await tx.delete(userEggs).where(eq(userEggs.userId, userId));
